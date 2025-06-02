@@ -14,9 +14,12 @@ datasource db {
 }
 
 enum UserRole {
+  ROOT
+  SYSTEM
   ADMIN
+  MODERATOR
   USER
-  JUDGE
+  GUEST
 }
 
 model User {

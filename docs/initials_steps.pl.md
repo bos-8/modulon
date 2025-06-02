@@ -51,9 +51,48 @@ CREATE DATABASE contest_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_c
 
 # SERVER
 ```powershell
+# Packets
 npm install helmet cookie-parser @nestjs/config
 npm install class-validator class-transformer
+npm install @nestjs/passport passport
+npm install @nestjs/jwt passport-jwt
+npm install argon2
+npm install uuid
+
+# Types
+npm install -D @types/passport-jwt @types/passport @types/argon2
+
 ```
+
+
+
+## MODUŁY
+```powershell
+# auth
+nest g module modules/auth
+nest g controller modules/auth
+nest g service modules/auth
+nest g class modules/auth/dto/login.dto --flat
+nest g class modules/auth/dto/register.dto --flat
+
+# guards
+mkdir -p .\src\guards
+nest g guard guards/jwt
+nest g guard guards/roles
+
+# strategies
+mkdir -p .\src\strategies
+nest g class strategies/jwt.strategy --flat
+
+# decorators
+mkdir -p .\src\decorators
+nest g decorator decorators/current-user --flat
+```
+
+
+
+
+
 
 ## PRISMA
 ```powershell
@@ -65,6 +104,7 @@ npx nest g s database/prisma --flat
 ### MIGRACJA
 ```powershell
 npx prisma migrate dev --name init-db-schema
+npx prisma migrate dev --name user-role
 ```
 
 
@@ -73,4 +113,5 @@ npx prisma migrate dev --name init-db-schema
 npm install react-bootstrap-icons
 npm install next-intl
 npm install react-hook-form zod @hookform/resolvers
+npm install axios
 

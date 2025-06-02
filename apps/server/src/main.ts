@@ -27,7 +27,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  Logger.log(`Middlewares enabled: CORS:${CLIENT_URL}, Helmet, Cookie Parser`, 'Middleware');
+  Logger.log(`Middlewares enabled: CORS, Helmet, Cookie Parser`, 'Middleware');
+  Logger.debug(`Client is running on ${CLIENT_URL}`, 'Middleware');
 
   // Validation
   app.useGlobalPipes(

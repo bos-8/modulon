@@ -6,6 +6,7 @@ import "../../styles/globals.css";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { AuthProvider } from '@/lib/auth/auth.context'
 
 export const metadata: Metadata = {
   title: "MODULON",
@@ -30,9 +31,11 @@ export default async function LocaleLayout({
       </head>
       <body className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <NextIntlClientProvider>
-          <Navbar />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

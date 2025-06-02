@@ -12,7 +12,7 @@ export default function Home() {
 
       <div className="mt-10 max-w-2xl w-full bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">{t('projectTitle')}</h2>
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-justify">
           {t.rich('projectDescription', {
             strong: (chunks) => <strong>{chunks}</strong>
           })}

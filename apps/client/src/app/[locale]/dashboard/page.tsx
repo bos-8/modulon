@@ -1,10 +1,12 @@
 // @file: src/app/[locale]/dashboard/page.tsx
-'use client';
+'use client'
 
-import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl'
+import { useUser } from '@/lib/auth/auth.context'
 
 export default function DashboardPage() {
-  const t = useTranslations('DashboardPage');
+  const t = useTranslations('DashboardPage')
+  const user = useUser()
 
   return (
     <main className="flex flex-col items-center justify-start px-6 pt-20 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -12,11 +14,36 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
           {t('title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-2">
           {t('description')}
         </p>
+        {user && (
+          <table className="w-full mt-4 text-sm text-left text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700">
+            <tbody>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                  {t('emailLabel')}
+                </th>
+                <td className="py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
+              </tr>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                  {t('idLabel')}
+                </th>
+                <td className="py-3 text-gray-600 dark:text-gray-300">{user.id}</td>
+              </tr>
+              <tr>
+                <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                  {t('roleLabel')}
+                </th>
+                <td className="py-3 text-gray-600 dark:text-gray-300">{user.role}</td>
+              </tr>
+            </tbody>
+          </table>
+
+        )}
       </div>
     </main>
-  );
+  )
 }
-//EOF
+// EOF

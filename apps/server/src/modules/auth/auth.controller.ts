@@ -1,0 +1,75 @@
+// @file: server/src/modules/auth/auth.controller.ts
+
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common'
+import { AuthService } from './auth.service'
+import { LoginDto, RegisterDto } from './auth.dto'
+import { Request, Response } from 'express'
+import { AuthResponse, MeResponse } from '@/types/auth.response'
+import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
+import { Roles } from '@/decorators/roles.decorator'
+import { RolesGuard } from '@/guards/roles.guard'
+import { UserRole } from '@prisma/client'
+
+interface JwtRequestUser {
+  id: string
+  email: string
+  role: UserRole
+}
+
+// @UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) { }
+
+  @Post('register')
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    console.log('Registering user:', dto)
+    const result = await this.authService.register(dto)
+    this.authService.setAuthCookies(res, result.tokens)
+    return result
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const result = await this.authService.login(dto)
+    this.authService.setAuthCookies(res, result.tokens)
+    return result
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
+    this.authService.clearAuthCookies(res)
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  async me(@Req() req: Request): Promise<MeResponse> {
+    const user = req.user as JwtRequestUser
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    }
+  }
+}
+// EOF

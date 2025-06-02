@@ -1,37 +1,47 @@
-'use client';
+// @file: client/src/app/[locale]/login/page.tsx
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, LoginFormValues } from './loginForm.schema';
-import { useTranslations } from 'next-intl';
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { loginSchema, LoginFormValues } from './loginForm.schema'
+import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import api from '@/lib/api/axios'
 
 export default function LoginPage() {
-  const t = useTranslations('Login');
+  const t = useTranslations('Login')
+  const router = useRouter()
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema(t)),
-  });
+  })
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log('Login data:', data);
-    // TODO: handle login
-  };
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      await api.post('/auth/login', data) // proxy: /api/auth/login → backend
+      router.push('/dashboard')
+    } catch (err: any) {
+      alert(err?.response?.data?.message || t('errors.default'))
+    }
+  }
 
   return (
     <main className="flex justify-center px-4 pt-20 pb-10 bg-gray-50 dark:bg-gray-900">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-md"
+        className="min-w-[320px] sm:min-w-[400px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-md"
       >
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
           {t('title')}
         </h1>
 
         <div className="mb-4">
-          <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300" htmlFor="email">
+          <label htmlFor="email" className="block text-sm mb-1 text-gray-700 dark:text-gray-300">
             {t('email')}
           </label>
           <input
@@ -40,13 +50,11 @@ export default function LoginPage() {
             {...register('email')}
             className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300" htmlFor="password">
+          <label htmlFor="password" className="block text-sm mb-1 text-gray-700 dark:text-gray-300">
             {t('password')}
           </label>
           <input
@@ -55,9 +63,7 @@ export default function LoginPage() {
             {...register('password')}
             className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-          )}
+          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
         </div>
 
         <button
@@ -68,6 +74,6 @@ export default function LoginPage() {
         </button>
       </form>
     </main>
-  );
+  )
 }
 // EOF

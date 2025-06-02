@@ -1,14 +1,18 @@
-// @file: src/app/[locale]/signup/page.tsx
-'use client';
+// @file: src/app/[locale]/register/page.tsx
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslations } from 'next-intl';
-import { signupSchema, SignupFormValues } from './signupForm.schema';
+'use client'
+
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
+import { signupSchema, SignupFormValues } from './registerForm.schema'
+import { useRouter } from 'next/navigation'
+import api from '@/lib/api/axios'
 
 export default function SignupPage() {
-  const t = useTranslations();
-  const schema = signupSchema(t);
+  const t = useTranslations()
+  const schema = signupSchema(t)
+  const router = useRouter()
 
   const {
     register,
@@ -17,17 +21,23 @@ export default function SignupPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(schema),
-  });
+  })
 
   const onSubmit = async (data: SignupFormValues) => {
-    console.log('SIGNUP', data);
-  };
+    const { confirmPassword, ...payload } = data
+    try {
+      await api.post('/auth/register', payload)
+      router.push('/login')
+    } catch (err: any) {
+      alert(err.response?.data?.message || t('Signup.errors.default'))
+    }
+  }
 
   return (
     <main className="flex justify-center px-4 pt-20 pb-10 bg-gray-50 dark:bg-gray-900">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-md space-y-4"
+        className="min-w-[320px] sm:min-w-[400px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-md space-y-4"
       >
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white text-center">
           {t('Signup.title')}
@@ -92,6 +102,6 @@ export default function SignupPage() {
         </div>
       </form>
     </main>
-  );
+  )
 }
-//EOF
+// EOF

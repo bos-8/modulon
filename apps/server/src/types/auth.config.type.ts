@@ -1,0 +1,16 @@
+// @file: server/src/config/types/auth-config.type.ts
+export type AuthConfig = {
+  accessToken: {
+    secret: string
+    expiresInMs: number
+    expiresInSec: number
+  }
+  refreshToken: {
+    secret: string
+    expiresInMs: number
+    expiresInSec: number
+  }
+  nodeEnv: string,
+  isProd: boolean
+}
+// EOF
