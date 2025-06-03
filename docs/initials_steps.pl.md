@@ -114,4 +114,5 @@ npm install react-bootstrap-icons
 npm install next-intl
 npm install react-hook-form zod @hookform/resolvers
 npm install axios
+npm install jwt-decode
 

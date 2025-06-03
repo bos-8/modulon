@@ -18,5 +18,6 @@ export type MeResponse = {
   id: string
   email: string
   role: string
+  exp: number
 }
 // EOF

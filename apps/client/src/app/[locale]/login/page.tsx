@@ -7,23 +7,29 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema, LoginFormValues } from './loginForm.schema'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { useInitializeSession } from '@/lib/auth/auth.context'
+import { Throbber } from '@/components/ui/Throbber'
+
 import api from '@/lib/api/axios'
 
 export default function LoginPage() {
   const t = useTranslations('Login')
   const router = useRouter()
+  const initializeUserSession = useInitializeSession()
+
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema(t)),
   })
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await api.post('/auth/login', data) // proxy: /api/auth/login → backend
+      await api.post('/auth/login', data)
+      await initializeUserSession();
       router.push('/dashboard')
     } catch (err: any) {
       alert(err?.response?.data?.message || t('errors.default'))
@@ -68,9 +74,10 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="w-full bg-green-600 dark:bg-green-500 text-white dark:text-gray-900 p-2 rounded hover:bg-green-700 dark:hover:bg-green-400 transition"
+          disabled={isSubmitting}
+          className="w-full bg-green-600 dark:bg-green-500 text-white dark:text-gray-900 p-2 rounded hover:bg-green-700 dark:hover:bg-green-400 transition flex items-center justify-center"
         >
-          {t('submit')}
+          {isSubmitting ? <Throbber className="w-5 h-5" /> : t('submit')}
         </button>
       </form>
     </main>

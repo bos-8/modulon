@@ -19,11 +19,13 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { Roles } from '@/decorators/roles.decorator'
 import { RolesGuard } from '@/guards/roles.guard'
 import { UserRole } from '@prisma/client'
+import { access } from 'fs'
 
 interface JwtRequestUser {
   id: string
   email: string
   role: UserRole
+  exp: number
 }
 
 // @UseGuards(JwtAuthGuard, RolesGuard)
@@ -55,8 +57,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
-    this.authService.clearAuthCookies(res)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    await this.authService.logout(req, res)
   }
 
   @Get('me')
@@ -69,7 +71,19 @@ export class AuthController {
       id: user.id,
       email: user.email,
       role: user.role,
+      exp: user.exp,
     }
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const result = await this.authService.refreshSession(req)
+    this.authService.setAuthCookies(res, result.tokens)
+    return result
   }
 }
 // EOF

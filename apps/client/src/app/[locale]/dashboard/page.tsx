@@ -2,11 +2,21 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useUser } from '@/lib/auth/auth.context'
+import { useUser, useAuthLoading } from '@/lib/auth/auth.context'
+import { Throbber } from '@/components/ui/Throbber'
 
 export default function DashboardPage() {
   const t = useTranslations('DashboardPage')
   const user = useUser()
+  const loading = useAuthLoading()
+
+  if (loading) {
+    return (
+      <main className="flex items-center justify-center h-[60vh]">
+        <Throbber className="w-8 h-8" />
+      </main>
+    )
+  }
 
   return (
     <main className="flex flex-col items-center justify-start px-6 pt-20 pb-12 bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -24,23 +34,22 @@ export default function DashboardPage() {
                 <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                   {t('emailLabel')}
                 </th>
-                <td className="py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
+                <td className="py-3">{user.email}</td>
               </tr>
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                   {t('idLabel')}
                 </th>
-                <td className="py-3 text-gray-600 dark:text-gray-300">{user.id}</td>
+                <td className="py-3">{user.id}</td>
               </tr>
               <tr>
                 <th scope="row" className="py-3 pr-6 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
                   {t('roleLabel')}
                 </th>
-                <td className="py-3 text-gray-600 dark:text-gray-300">{user.role}</td>
+                <td className="py-3">{user.role}</td>
               </tr>
             </tbody>
           </table>
-
         )}
       </div>
     </main>

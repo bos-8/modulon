@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config'
 import { RegisterDto, LoginDto } from './auth.dto'
 import * as argon2 from 'argon2'
 import { JwtService } from '@nestjs/jwt'
-import { Response } from 'express'
+import { Response, Request } from 'express'
 import { AuthResponse } from '@/types/auth.response'
 import { v4 as uuid } from 'uuid'
 
@@ -114,6 +114,100 @@ export class AuthService {
   async clearAuthCookies(res: Response) {
     res.clearCookie('access_token')
     res.clearCookie('refresh_token')
+  }
+
+  async logout(req: Request, res: Response): Promise<void> {
+    const refreshToken = req.cookies?.refresh_token
+
+    if (refreshToken) {
+      try {
+        const payload = this.jwt.decode(refreshToken) as { sid: string }
+        if (payload?.sid) {
+          await this.prisma.session.delete({
+            where: { id: payload.sid },
+          })
+        }
+      } catch (err) {
+        // log optionally or ignore
+      }
+    }
+
+    this.clearAuthCookies(res)
+  }
+
+
+  async refreshSession(req: Request): Promise<AuthResponse> {
+    const refreshToken = req.cookies?.refresh_token
+    if (!refreshToken) throw new UnauthorizedException('No refresh token')
+
+    // weryfikacja JWT
+    let payload: any
+    try {
+      payload = await this.jwt.verifyAsync(refreshToken, {
+        secret: this.config.get('auth.refreshToken.secret'),
+      })
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token')
+    }
+
+    // pobranie sesji z DB
+    const session = await this.prisma.session.findUnique({
+      where: { id: payload.sid },
+      include: { user: true },
+    })
+
+    if (!session || session.expires.getTime() < Date.now())
+      throw new UnauthorizedException('Session expired or not found')
+
+    // opcjonalne odświeżenie expires (strategia sliding window)
+    await this.prisma.session.update({
+      where: { id: session.id },
+      data: {
+        expires: new Date(Date.now() + this.config.get('auth.refreshToken.expiresInMs')),
+      },
+    })
+
+    // generuj nowe tokeny
+    const accessToken = await this.jwt.signAsync(
+      {
+        sub: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+        sid: session.id,
+      },
+      {
+        secret: this.config.get('auth.accessToken.secret'),
+        expiresIn: this.config.get('auth.accessToken.expiresInSec'),
+      },
+    )
+
+    const newRefreshToken = await this.jwt.signAsync(
+      { sub: session.user.id, sid: session.id },
+      {
+        secret: this.config.get('auth.refreshToken.secret'),
+        expiresIn: this.config.get('auth.refreshToken.expiresInSec'),
+      },
+    )
+
+    // aktualizacja sessionToken
+    await this.prisma.session.update({
+      where: { id: session.id },
+      data: {
+        sessionToken: newRefreshToken,
+      },
+    })
+
+    return {
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+      },
+      tokens: {
+        accessToken,
+        refreshToken: newRefreshToken,
+      },
+    }
   }
 }
 // EOF

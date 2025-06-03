@@ -14,6 +14,7 @@ export type User = {
   id: string
   email: string
   role: string
+  exp: number
 }
 
 export type AuthResponse = {
