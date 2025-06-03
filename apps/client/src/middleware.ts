@@ -1,11 +1,19 @@
-import createMiddleware from 'next-intl/middleware';
-import { routing } from './i18n/routing';
+// @file: apps/client/middleware.ts
+import { NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { routing } from './i18n/routing'
 
-export default createMiddleware(routing);
+/**
+ * Middleware odpowiada wyłącznie za obsługę i18n.
+ * Wszystkie zabezpieczenia dostępowe odbywają się SSR w layoutach.
+ */
+export default function middleware(req: NextRequest) {
+  const handleI18nRouting = createMiddleware(routing)
+  return handleI18nRouting(req)
+}
 
+// Zakres działania middleware (wyklucza pliki statyczne, API itd.)
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
-  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
-};
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)',
+}
+// EOF

@@ -7,6 +7,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { AuthProvider } from '@/lib/auth/auth.context'
+import { AuthRedirectWatcher } from "@/lib/auth/AuthRedirectWatcher";
 
 export const metadata: Metadata = {
   title: "MODULON",
@@ -33,6 +34,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <AuthProvider>
             <Navbar />
+            <AuthRedirectWatcher />
             <main className="flex-grow">{children}</main>
             <Footer />
           </AuthProvider>

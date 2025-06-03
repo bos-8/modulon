@@ -20,14 +20,30 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaExceptionFilter());
 
   // Middleware
-  app.use(helmet());
+  // app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+        "style-src": ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+        "font-src": ["'self'", "fonts.gstatic.com"],
+        "img-src": ["'self'", "data:", "blob:"],
+      },
+    },
+  }));
+  Logger.log(`Middlewares enabled: Helmet`, 'Middleware');
+
   app.use(cookieParser());
+  Logger.log(`Middlewares enabled: Cookie Parser`, 'Middleware');
+
   app.enableCors({
     origin: CLIENT_URL,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  Logger.log(`Middlewares enabled: CORS, Helmet, Cookie Parser`, 'Middleware');
+  Logger.log(`Middlewares enabled: CORS: [GET,HEAD,PUT,PATCH,POST,DELETE]`, 'Middleware');
   Logger.debug(`Client is running on ${CLIENT_URL}`, 'Middleware');
 
   // Validation

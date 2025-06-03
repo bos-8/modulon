@@ -112,8 +112,15 @@ export class AuthService {
   }
 
   async clearAuthCookies(res: Response) {
-    res.clearCookie('access_token')
-    res.clearCookie('refresh_token')
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax' as const,
+      path: '/',
+    }
+
+    res.clearCookie('access_token', cookieOptions)
+    res.clearCookie('refresh_token', cookieOptions)
   }
 
   async logout(req: Request, res: Response): Promise<void> {

@@ -13,7 +13,7 @@ import {
 import { fetchMe, logout } from './auth.api'
 import { scheduleSessionExpiryWarning } from './session'
 import { SessionExpiryPopup } from '@/components/ui/SessionExpiryPopup'
-import { User } from './auth.types'
+import { User, UserRole } from './auth.types'
 import api from '@/lib/api/axios'
 
 type AuthContextType = {
@@ -105,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null)
     setTokenExpiresAt(null)
     setShowPopup(false)
+    window.location.href = '/login'
   }
 
   // Refetch użytkownika ręcznie
@@ -115,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTokenExpiresAt(me.exp * 1000)
     } catch {
       setUser(null)
+      await handleLogout()
     }
   }
 
@@ -155,6 +157,37 @@ export const useAuth = () => {
   return context
 }
 
+export const useUserRole = (): UserRole => {
+  const user = useUser()
+  const rawRole = user?.role
+
+  if (rawRole && Object.values(UserRole).includes(rawRole as UserRole)) {
+    return rawRole as UserRole
+  }
+
+  return UserRole.GUEST
+}
+
+export const useHasRole = (role: UserRole): boolean => {
+  return useUserRole() === role
+}
+
+export const useIsRoleAtLeast = (minRole: UserRole): boolean => {
+  const userRole = useUserRole()
+  if (!userRole) return false
+
+  const rolePriority: Record<UserRole, number> = {
+    [UserRole.ROOT]: 6,
+    [UserRole.SYSTEM]: 5,
+    [UserRole.ADMIN]: 4,
+    [UserRole.MODERATOR]: 3,
+    [UserRole.USER]: 2,
+    [UserRole.GUEST]: 1,
+  }
+
+  return rolePriority[userRole] >= rolePriority[minRole]
+}
+
 export const useUser = () => useAuth().user
 export const useAuthLoading = () => useAuth().loading
 export const useLogout = () => useAuth().logout
@@ -162,4 +195,9 @@ export const useRefreshUser = () => useAuth().refreshUser
 export const useIsAuthenticated = () => !!useAuth().user
 export const useTokenExpiration = () => useAuth().tokenExpiresAt
 export const useInitializeSession = () => useAuth().initializeUserSession
+
+export const useIsAdmin = () => useHasRole(UserRole.ADMIN)
+export const useIsModerator = () => useHasRole(UserRole.MODERATOR)
+export const useIsSystem = () => useHasRole(UserRole.SYSTEM)
+export const useIsRoot = () => useHasRole(UserRole.ROOT)
 // EOF

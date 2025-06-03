@@ -25,37 +25,3 @@ export type AuthResponse = {
   }
 }
 // EOF
-
-
-// export type User = {
-//   uuid_user: string;
-//   email: string;
-//   role: UserRole;
-//   username?: string;
-//   createdAt?: string;
-//   updatedAt?: string;
-// };
-
-// export type MeResponse = {
-//   user: User;
-//   expiresAt: string;
-// };
-
-// export type LoginResponse = {
-//   user: User;
-//   accessToken: string;
-//   expiresAt?: string;
-// };
-
-// export type AuthContextType = {
-//   user: User | null;
-//   expiresAt: Date | null;
-//   isAuthenticated: boolean;
-//   loading: boolean;
-//   login: (email: string, password: string) => Promise<void>;
-//   logout: (onFinish?: () => void) => Promise<void>;
-//   logoutAll: (onFinish?: () => void) => Promise<void>;
-//   refreshSession: () => Promise<void>;
-//   setExpiresAt: (date: Date | null) => void;
-//   checkAuth: () => Promise<void>;
-// };

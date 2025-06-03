@@ -41,7 +41,7 @@ export const SessionExpiryPopup = ({ expiresAt, onExtend, onLogout }: Props) => 
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-800 shadow-lg border border-gray-300 dark:border-gray-700 p-4 rounded-xl w-80">
+    <div className="fixed top-13 right-2 z-50 bg-white dark:bg-gray-800 shadow-lg border border-gray-300 dark:border-gray-700 p-4 rounded-xl w-60">
       <p className="text-sm text-gray-800 dark:text-white mb-2">
         Twoja sesja wygaśnie za <strong>{Math.floor(countdown / 60)}m {countdown % 60}s</strong>
       </p>
