@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { Roles } from '@/decorators/roles.decorator'
 import { RolesGuard } from '@/guards/roles.guard'
 import { UserRole } from '@prisma/client'
+import { Throttle } from '@nestjs/throttler'
 
 interface JwtRequestUser {
   id: string
@@ -56,14 +57,15 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  // @Throttle({ default: { limit: 100, ttl: 10000, blockDuration: 30000 } })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.authService.logout(req, res)
   }
 
   @Get('me')
   @HttpCode(HttpStatus.OK)
+  // @Throttle({ default: { limit: 200, ttl: 10000, blockDuration: 30000 } })
   @UseGuards(JwtAuthGuard)
-  @Roles(UserRole.USER, UserRole.ADMIN)
   async me(@Req() req: Request): Promise<MeResponse> {
     const user = req.user as JwtRequestUser
     return {

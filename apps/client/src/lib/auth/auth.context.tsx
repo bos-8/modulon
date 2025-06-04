@@ -80,8 +80,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setShowPopup(true)
         console.warn('[SESSION] Session is about to expire.')
       })
-    } catch {
+    } catch (error: any) {
       setUser(null)
+      if (error?.response?.status === 429) {
+        setUser(null)
+        setTokenExpiresAt(null)
+        setShowPopup(false)
+        clearAllTimers()
+        await logout()
+      }
     } finally {
       setLoading(false)
     }

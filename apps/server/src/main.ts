@@ -15,6 +15,12 @@ async function bootstrap() {
   const config: ConfigService = app.get(ConfigService);
   const PORT = config.get<number>('PORT') || 5000;
   const CLIENT_URL = config.get<string>('CLIENT_URL') || 'http://localhost:3000';
+  const isProd = config.get<string>('NODE_ENV') === 'production';
+  const ttl = config.get<number>('RATE_LIMIT_TTL');
+  const limit = config.get<number>('RATE_LIMIT_LIMIT');
+  const blockDuration = config.get<number>('RATE_LIMIT_BLOCK_DURATION');
+
+  Logger.debug(`Throttle enabled with: TTL=${ttl}ms, Limit=${limit}, Block Duration=${blockDuration}ms`, 'Throttle');
 
   // Prisma Client
   app.enableShutdownHooks();
@@ -41,6 +47,14 @@ async function bootstrap() {
     xssFilter: true,
     hidePoweredBy: true,
     permittedCrossDomainPolicies: { permittedPolicies: 'none' },
+    noSniff: true,
+    hsts: isProd
+      ? {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
+      : false,
   }));
   Logger.log(`Middlewares enabled: Helmet`, 'Middleware');
 
@@ -70,6 +84,7 @@ async function bootstrap() {
 
   await app.listen(PORT ?? 5000);
   Logger.debug(`Server is running on ${await app.getUrl()}`, 'Bootstrap');
+  Logger.debug(`System is running in ${isProd ? 'production' : 'development'} mode`, 'System');
 }
 bootstrap();
 //EOF
