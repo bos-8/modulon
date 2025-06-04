@@ -1,5 +1,6 @@
 // @file: server/src/main.ts
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
@@ -8,7 +9,7 @@ import helmet from 'helmet';
 import { PrismaExceptionFilter } from './filters/prisma-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enviroment configuration
   const config: ConfigService = app.get(ConfigService);
@@ -18,6 +19,9 @@ async function bootstrap() {
   // Prisma Client
   app.enableShutdownHooks();
   app.useGlobalFilters(new PrismaExceptionFilter());
+
+  app.set('trust proxy', 1);
+  Logger.log(`Trust proxy enabled`, 'Security');
 
   // Middleware
   // app.use(helmet());
@@ -32,6 +36,11 @@ async function bootstrap() {
         "img-src": ["'self'", "data:", "blob:"],
       },
     },
+    referrerPolicy: { policy: 'no-referrer' },
+    frameguard: { action: 'deny' },
+    xssFilter: true,
+    hidePoweredBy: true,
+    permittedCrossDomainPolicies: { permittedPolicies: 'none' },
   }));
   Logger.log(`Middlewares enabled: Helmet`, 'Middleware');
 

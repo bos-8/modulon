@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from './database/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './auth.config'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 
 @Module({
@@ -17,8 +19,27 @@ import authConfig from './auth.config'
     }),
     PrismaModule,
     AuthModule,
+    ThrottlerModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        throttlers: [
+          {
+            name: 'global',
+            ttl: config.get<number>('RATE_LIMIT_TTL'),
+            limit: config.get<number>('RATE_LIMIT_LIMIT'),
+            blockDuration: config.get<number>('RATE_LIMIT_BLOCK_DURATION'),
+          },
+        ],
+      }),
+      inject: [ConfigService],
+    })
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    }
+  ],
 })
 export class AppModule { }

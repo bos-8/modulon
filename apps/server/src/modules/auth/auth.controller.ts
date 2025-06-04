@@ -19,7 +19,6 @@ import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { Roles } from '@/decorators/roles.decorator'
 import { RolesGuard } from '@/guards/roles.guard'
 import { UserRole } from '@prisma/client'
-import { access } from 'fs'
 
 interface JwtRequestUser {
   id: string

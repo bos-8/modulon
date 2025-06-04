@@ -58,6 +58,7 @@ npm install @nestjs/passport passport
 npm install @nestjs/jwt passport-jwt
 npm install argon2
 npm install uuid
+npm install @nestjs/throttler
 
 # Types
 npm install -D @types/passport-jwt @types/passport @types/argon2
@@ -116,3 +117,21 @@ npm install react-hook-form zod @hookform/resolvers
 npm install axios
 npm install jwt-decode
 
+
+
+
+
+# THROTTLER TEST
+```typescript
+// Endpoint z throttler global
+  @Get('ping')
+  // @Throttle({ default: { limit: 4, ttl: 60000 } }) // <<< nadpisuje globala
+  ping() {
+    return { pong: true, ts: Date.now() }
+  }
+```
+
+```powershell
+# 15 zapytań na endpoint auth/ping
+1..15 | ForEach-Object { Invoke-RestMethod http://localhost:5000/auth/ping; "" }
+```

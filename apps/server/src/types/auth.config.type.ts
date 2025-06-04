@@ -10,6 +10,10 @@ export type AuthConfig = {
     expiresInMs: number
     expiresInSec: number
   }
+  rateLimit: {
+    ttl: number
+    limit: number
+  }
   nodeEnv: string,
   isProd: boolean
 }

@@ -54,7 +54,7 @@ export default function Navbar() {
   }, [])
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+    <nav className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-100">
       <div className="max-w-7xl mx-auto px-4 py-1 flex items-center">
         {/* Logo + Name */}
         <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-800 dark:text-white">

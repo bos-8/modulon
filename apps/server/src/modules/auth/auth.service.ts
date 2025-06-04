@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common'
 import { PrismaService } from '@/database/prisma.service'
 import { ConfigService } from '@nestjs/config'
-// import { AuthConfig } from '@/types/auth.config.type'
 import { RegisterDto, LoginDto } from './auth.dto'
 import * as argon2 from 'argon2'
 import { JwtService } from '@nestjs/jwt'
@@ -37,7 +36,7 @@ export class AuthService {
       },
     })
 
-    console.log('[REGISTER]', user) // <--- dodaj to
+    console.log('[REGISTER]', user) // <<< log the registered user: TODEL
 
     return this.generateTokensAndSession(user.id, user.email, user.role)
   }
