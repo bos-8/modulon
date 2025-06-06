@@ -8,6 +8,7 @@ import authConfig from './auth.config'
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { UserModule } from './modules/admin/user/user.module';
+import { SessionModule } from './modules/admin/session/session.module';
 
 
 @Module({
@@ -33,7 +34,8 @@ import { UserModule } from './modules/admin/user/user.module';
       }),
       inject: [ConfigService],
     }),
-    UserModule
+    UserModule,
+    SessionModule
   ],
   controllers: [AppController],
   providers: [

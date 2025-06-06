@@ -77,8 +77,7 @@ ncu -u #update do najnowszych wersji
 nest g module modules/auth
 nest g controller modules/auth
 nest g service modules/auth
-nest g class modules/auth/dto/login.dto --flat
-nest g class modules/auth/dto/register.dto --flat
+nest g class modules/auth/auth.dto --flat
 
 # guards
 mkdir -p .\src\guards
@@ -92,6 +91,19 @@ nest g class strategies/jwt.strategy --flat
 # decorators
 mkdir -p .\src\decorators
 nest g decorator decorators/current-user --flat
+
+# admin/user
+nest g module modules/admin/user
+nest g controller modules/admin/user
+nest g service modules/admin/user
+nest g class modules/admin/user/user.dto --flat
+nest g class modules/admin/user/user.exception --flat
+
+# admin/session
+nest g module modules/admin/session
+nest g controller modules/admin/session
+nest g service modules/admin/session
+nest g class modules/admin/session/session.dto --flat
 ```
 
 

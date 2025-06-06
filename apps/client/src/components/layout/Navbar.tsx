@@ -71,7 +71,10 @@ export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
         <div className="flex gap-4 text-sm font-medium">
           <NavbarLink href="/" label={t('home')} />
           {!loading && isAdmin && (
-            <NavbarLink href="/admin/user/list" label="AdminPanel" />
+            <>
+              <NavbarLink href="/admin/user/list" label="AdminPanel" />
+              <NavbarLink href="/admin/session" label="SessionPanel" />
+            </>
           )}
         </div>
 
