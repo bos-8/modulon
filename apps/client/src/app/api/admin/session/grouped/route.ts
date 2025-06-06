@@ -1,4 +1,4 @@
-// @file: client/src/app/api/admin/session/route.ts
+// @file: client/src/app/api/admin/session/grouped/route.ts
 
 import { NextRequest } from 'next/server'
 import { proxyRequest } from '@/lib/api/proxyRequest'

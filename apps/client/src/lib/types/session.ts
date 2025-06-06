@@ -13,4 +13,12 @@ export type SessionDto = {
   } | null
 }
 
+export type GroupedSessionByUserDto = {
+  userId: string
+  email: string
+  role: string
+  sessionCount: number
+  activeSessionCount: number
+}
+
 // EOF

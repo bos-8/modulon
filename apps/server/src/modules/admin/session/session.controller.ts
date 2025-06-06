@@ -1,15 +1,23 @@
 // @file: server/src/modules/session/session.controller.ts
 import { Controller, Get, Delete, Param, Query, ParseUUIDPipe } from '@nestjs/common'
 import { SessionService } from './session.service'
-import { GetSessionsQueryDto } from './session.dto'
+import { GetUserSessionsQueryDto, GetGroupedSessionsQueryDto } from './session.dto'
 
 @Controller('admin/session')
 export class SessionController {
   constructor(private readonly sessionService: SessionService) { }
 
   @Get()
-  async getSessions(@Query() query: GetSessionsQueryDto) {
-    return this.sessionService.getSessions(query)
+  async getGroupedSessions(@Query() query: GetGroupedSessionsQueryDto) {
+    return this.sessionService.getGroupedSessions(query)
+  }
+
+  @Get(':userId')
+  async getUserSessions(
+    @Query() query: GetUserSessionsQueryDto,
+    @Param('userId', ParseUUIDPipe) userId: string
+  ) {
+    return this.sessionService.getUserSessions(query, userId)
   }
 
   @Delete(':id')

@@ -1,7 +1,7 @@
-import { SessionDto } from './session.dto';
+import { GetUserSessionsQueryDto } from './session.dto';
 
-describe('SessionDto', () => {
+describe('GetUserSessionsQueryDto', () => {
   it('should be defined', () => {
-    expect(new SessionDto()).toBeDefined();
+    expect(new GetUserSessionsQueryDto()).toBeDefined();
   });
 });

@@ -1,45 +1,48 @@
-// @file: client/src/app/[locale]/admin/sessions/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getGroupedSessions, deleteUserSessions, deleteUserInactiveSessions } from '@/lib/api/admin/session.api'
-import type { GroupedSessionByUserDto } from '@/lib/types/session'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import { getSessions, deleteSession } from '@/lib/api/admin/session.api'
+import type { SessionDto } from '@/lib/types/session'
 
 const DEFAULT_LIMIT = 10
-const ALLOWED_LIMITS = [1, 10, 25, 50, 100]
+const ALLOWED_LIMITS = [3, 10, 20, 50, 100]
 
-export default function AdminGroupedSessionsPage() {
+export default function AdminUserSessionsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { id: userId } = useParams<{ id: string }>()
 
-  const [sessions, setSessions] = useState<GroupedSessionByUserDto[]>([])
+  const [sessions, setSessions] = useState<SessionDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [total, setTotal] = useState(0)
 
   const [filterInput, setFilterInput] = useState(searchParams.get('search') || '')
   const [filter, setFilter] = useState('')
+  const [sort, setSort] = useState('createdAt:desc')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(DEFAULT_LIMIT)
+  const [total, setTotal] = useState(0)
 
   const updateUrlParams = (params: Partial<Record<string, string | number>>) => {
     const q = new URLSearchParams(searchParams.toString())
     Object.entries(params).forEach(([key, value]) => {
-      if (!value) q.delete(key)
-      else q.set(key, String(value))
+      if (value === undefined || value === '' || value === null) {
+        q.delete(key)
+      } else {
+        q.set(key, String(value))
+      }
     })
     router.push(`?${q.toString()}`)
   }
 
   const parseUrlParams = () => {
     const search = searchParams.get('search') || ''
+    const rawSort = searchParams.get('sort') || 'createdAt:desc'
     const rawPage = Number(searchParams.get('page')) || 1
     const rawLimit = Number(searchParams.get('limit')) || DEFAULT_LIMIT
-    const sort = searchParams.get('sort') || 'email:asc'
 
-    const safePage = rawPage < 1 ? 1 : rawPage
+    const safePage = Math.max(1, rawPage)
     const safeLimit = ALLOWED_LIMITS.includes(rawLimit) ? rawLimit : DEFAULT_LIMIT
 
     if (rawPage < 1 || rawLimit !== safeLimit) {
@@ -47,79 +50,93 @@ export default function AdminGroupedSessionsPage() {
     }
 
     setFilter(search)
+    setSort(rawSort)
     setPage(safePage)
     setLimit(safeLimit)
 
-    return { search, page: safePage, limit: safeLimit, sort }
+    return { search, sort: rawSort, page: safePage, limit: safeLimit }
   }
 
-
   useEffect(() => {
-    setLoading(true)
-    const { search, page, limit, sort } = parseUrlParams()
-    getGroupedSessions({ search, page, limit, sort })
+    if (!userId) return
+    const { search, sort, page: safePage, limit: safeLimit } = parseUrlParams()
 
+    setLoading(true)
+    getSessions({ search, sort, page: safePage, limit: safeLimit, userId })
       .then(res => {
-        const maxPage = Math.max(1, Math.ceil(res.total / limit))
-        if (page > maxPage) updateUrlParams({ page: maxPage })
-        else {
+        const maxPage = Math.max(1, Math.ceil(res.total / safeLimit))
+        if (safePage > maxPage) {
+          updateUrlParams({ page: maxPage })
+        } else {
           setSessions(res.data || [])
           setTotal(res.total || 0)
         }
       })
-      .catch(() => setError('Nie udało się pobrać danych'))
+      .catch(() => setError('Nie udało się pobrać sesji'))
       .finally(() => setLoading(false))
-  }, [searchParams])
+  }, [searchParams.toString(), userId])
+
+  const userEmail = sessions.length > 0
+    ? (sessions[0].user?.email ?? 'Nieznany użytkownik')
+    : 'Nieznany użytkownik'
+
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
+  const toggleSort = (field: string) => {
+    const [currentField, currentDir] = sort.split(':')
+    const newDir = currentField === field && currentDir === 'asc' ? 'desc' : 'asc'
+    updateUrlParams({ sort: `${field}:${newDir}`, page: 1 })
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteSession(id)
+      setSessions(prev => prev.filter(sess => sess.id !== id))
+    } catch {
+      alert('Nie udało się usunąć sesji.')
+    }
+  }
 
   const handleSearch = () => {
     updateUrlParams({ search: filterInput.trim(), page: 1 })
   }
 
-  const handleDeleteAll = async (userId: string) => {
-    await deleteUserSessions(userId)
-    router.refresh()
-  }
-
-  const handleDeleteInactive = async (userId: string) => {
-    await deleteUserInactiveSessions(userId)
-    router.refresh()
-  }
-
-  const toggleSort = (field: string) => {
-    const [currentField, currentDir] = searchParams.get('sort')?.split(':') || []
-    const newDir = currentField === field && currentDir === 'asc' ? 'desc' : 'asc'
-    updateUrlParams({ sort: `${field}:${newDir}`, page: 1 })
-  }
-
-  const totalPages = Math.max(1, Math.ceil(total / limit))
-
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-white">
-        Sesje użytkowników
-      </h1>
-
-      <div className="flex items-center gap-2 mb-6">
-        <input
-          type="text"
-          placeholder="Szukaj po email..."
-          className="w-full max-w-sm px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-          value={filterInput}
-          onChange={e => setFilterInput(e.target.value)}
-        />
+      <div className="flex items-center justify-between mb-4">
         <button
-          onClick={handleSearch}
-          className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded"
+          onClick={() => router.push('/admin/session')}
+          className="text-sm text-blue-600 hover:underline"
         >
-          Szukaj
+          ← Wróć do listy sesji
         </button>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Sesje użytkownika: <span className="text-blue-600 dark:text-blue-400">{userEmail}</span>
+        </h1>
+
+        <div className="flex items-center gap-2 mb-6">
+          <input
+            type="text"
+            placeholder="Szukaj po IP lub urządzeniu..."
+            className="w-full max-w-sm px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+            value={filterInput}
+            onChange={(e) => setFilterInput(e.target.value)}
+          />
+          <button
+            onClick={() => updateUrlParams({ search: filterInput.trim(), page: 1 })}
+            className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded"
+          >
+            Filtruj
+          </button>
+        </div>
+
       </div>
 
       {loading && <p className="text-gray-600 dark:text-gray-300">Ładowanie danych...</p>}
       {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
 
       {!loading && sessions.length === 0 && (
-        <p className="text-gray-500 dark:text-gray-400">Brak wyników.</p>
+        <p className="text-gray-500 dark:text-gray-400">Brak aktywnych sesji.</p>
       )}
 
       {!loading && sessions.length > 0 && (
@@ -129,47 +146,45 @@ export default function AdminGroupedSessionsPage() {
               <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold">
                 <tr>
                   <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('email')}>
-                    Email {searchParams.get('sort')?.startsWith('email') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
+                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('ip')}>
+                    IP {sort.startsWith('ip') && (sort.endsWith('asc') ? '▲' : '▼')}
                   </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('role')}>
-                    Rola
+                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('deviceInfo')}>
+                    Urządzenie {sort.startsWith('deviceInfo') && (sort.endsWith('asc') ? '▲' : '▼')}
                   </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('sessionCount')}>
-                    Sesje {searchParams.get('sort')?.startsWith('sessionCount') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
+                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('createdAt')}>
+                    Utworzono {sort.startsWith('createdAt') && (sort.endsWith('asc') ? '▲' : '▼')}
                   </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('activeSessionCount')}>
-                    Aktywne {searchParams.get('sort')?.startsWith('activeSessionCount') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
+                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('expires')}>
+                    Wygasa {sort.startsWith('expires') && (sort.endsWith('asc') ? '▲' : '▼')}
                   </th>
                   <th className="px-4 py-3">Akcje</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {sessions.map((user, index) => (
-                  <tr key={user.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono">{(page - 1) * limit + index + 1}</td>
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{user.email}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.role}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.sessionCount}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.activeSessionCount}</td>
-                    <td className="px-4 py-3 flex flex-wrap gap-1">
+                {sessions.map((sess, index) => (
+                  <tr key={sess.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono">
+                      {(page - 1) * limit + index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {sess.ip || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {sess.deviceInfo || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {new Date(sess.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      {new Date(sess.expires).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3">
                       <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => router.push(`/admin/session/${user.userId}`)}
+                        className="inline-flex items-center px-3 py-1 text-xs font-medium rounded bg-red-600 hover:bg-red-700 text-white"
+                        onClick={() => handleDelete(sess.id)}
                       >
-                        Szczegóły
-                      </button>
-                      <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                        onClick={() => handleDeleteInactive(user.userId)}
-                      >
-                        Usuń nieaktywne
-                      </button>
-                      <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => handleDeleteAll(user.userId)}
-                      >
-                        Usuń wszystkie
+                        Usuń
                       </button>
                     </td>
                   </tr>
@@ -178,7 +193,8 @@ export default function AdminGroupedSessionsPage() {
             </table>
           </div>
 
-          {/* PAGINATOR */}
+
+          {/* PAGINATION + LIMIT */}
           <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               Strona {page} z {totalPages}
@@ -227,9 +243,9 @@ export default function AdminGroupedSessionsPage() {
                     max={totalPages}
                     value={page}
                     className="w-16 px-3 py-1 text-sm text-center bg-blue-600 text-white rounded outline-none border-0 ring-2 ring-blue-500 focus:ring-blue-400
-                    [&::-webkit-outer-spin-button]:appearance-none
-                    [&::-webkit-inner-spin-button]:appearance-none
-                    [appearance:textfield]"
+    [&::-webkit-outer-spin-button]:appearance-none
+    [&::-webkit-inner-spin-button]:appearance-none
+    [appearance:textfield]"
                     onChange={(e) => {
                       const val = Number(e.target.value)
                       if (!isNaN(val)) updateUrlParams({ page: val })
@@ -243,6 +259,7 @@ export default function AdminGroupedSessionsPage() {
                       }
                     }}
                   />
+
                 ) : (
                   <button
                     key={p}
@@ -271,6 +288,8 @@ export default function AdminGroupedSessionsPage() {
               </button>
             </div>
           </div>
+
+
         </>
       )}
     </div>
