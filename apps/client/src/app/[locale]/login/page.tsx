@@ -31,6 +31,7 @@ export default function LoginPage() {
       await api.post('/auth/login', data)
       await initializeUserSession();
       router.push('/dashboard')
+      window.location.reload()
     } catch (err: any) {
       alert(err?.response?.data?.message || t('errors.default'))
     }

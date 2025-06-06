@@ -62,7 +62,11 @@ npm install @nestjs/throttler
 
 # Types
 npm install -D @types/passport-jwt @types/passport @types/argon2
+npm install @nestjs/core@^10.4.18 @nestjs/common@^10.4.18 @nestjs/platform-express@^10.4.18 @nestjs/testing@^10.4.1
 
+# Instalacja do najnowszych wersji
+npm install -g npm-check-updates
+ncu -u #update do najnowszych wersji
 ```
 
 
@@ -100,6 +104,12 @@ nest g decorator decorators/current-user --flat
 mkdir -p .\src\database
 npx nest g mo database/prisma --flat
 npx nest g s database/prisma --flat
+```
+
+### GENERACJA
+Kiedy nie widzi Typescript np.: UserRole
+```powershell
+npx prisma generate
 ```
 
 ### MIGRACJA

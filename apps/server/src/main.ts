@@ -30,7 +30,6 @@ async function bootstrap() {
   Logger.log(`Trust proxy enabled`, 'Security');
 
   // Middleware
-  // app.use(helmet());
   app.use(helmet({
     contentSecurityPolicy: {
       useDefaults: true,

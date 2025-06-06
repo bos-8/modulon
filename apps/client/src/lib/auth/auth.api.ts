@@ -1,7 +1,8 @@
 // @file: apps/client/src/lib/auth/auth.api.ts
 
 import api from '@/lib/api/axios'
-import { AuthResponse } from './auth.types'
+import { AuthResponse, User } from './auth.types'
+import { castToUserRole } from './role.auth'
 
 export async function login(payload: { email: string; password: string }): Promise<AuthResponse> {
   const res = await api.post('/auth/login', payload)
@@ -17,8 +18,12 @@ export async function logout(): Promise<void> {
   await api.post('/auth/logout')
 }
 
-export async function fetchMe(): Promise<AuthResponse['user']> {
+export async function fetchMe(): Promise<User> {
   const res = await api.get('/auth/me')
-  return res.data
+  const data = res.data
+
+  return {
+    ...data,
+    role: castToUserRole(data.role),
+  }
 }
-// EOF

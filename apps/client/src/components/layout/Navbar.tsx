@@ -8,6 +8,9 @@ import { useAuth } from '@/lib/auth/auth.context'
 import { useState, useRef, useEffect } from 'react'
 import { Envelope, Person } from 'react-bootstrap-icons'
 import { usePathname } from 'next/navigation'
+import { getMe } from '@/lib/auth/server.auth'
+import { adminsOnly } from '@/lib/auth/rbac.presets'
+import { castToUserRole } from '@/lib/auth/role.auth'
 
 const NavbarLink = ({ href, label }: { href: string; label: string }) => {
   const pathname = usePathname()
@@ -36,8 +39,7 @@ const NavbarLink = ({ href, label }: { href: string; label: string }) => {
   )
 }
 
-
-export default function Navbar() {
+export default function Navbar({ isAdmin }: { isAdmin: boolean }) {
   const t = useTranslations('Navbar')
   const { user, logout, loading } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -68,8 +70,10 @@ export default function Navbar() {
         {/* Navigation Links */}
         <div className="flex gap-4 text-sm font-medium">
           <NavbarLink href="/" label={t('home')} />
+          {!loading && isAdmin && (
+            <NavbarLink href="/admin/user/list" label="AdminPanel" />
+          )}
         </div>
-
 
         {/* Spacer */}
         <div className="ml-auto flex items-center gap-4">

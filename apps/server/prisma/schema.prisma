@@ -25,11 +25,11 @@ enum UserRole {
 model User {
   id                  String    @id @default(uuid())
   name                String?
-  username            String?   @unique
+  username            String? //@unique
   email               String?   @unique
   emailVerified       DateTime?
   image               String?
-  password            String?   @db.Text
+  password            String? //@db.Text
   isActive            Boolean   @default(true)
   isBlocked           Boolean   @default(false)
   isEmailConfirmed    Boolean   @default(false)
@@ -47,7 +47,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([email])
-  @@index([username])
+  // @@index([username])
   @@index([isActive, role])
 }
 

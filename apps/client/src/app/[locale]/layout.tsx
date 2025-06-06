@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Navbar from "../../components/layout/Navbar";
+import Navbar from "../../components/layout/NavbarServer";
 import Footer from "../../components/layout/Footer";
 import { themeInitScript } from "@/lib/theme/theme-init";
 import "../../styles/globals.css";
