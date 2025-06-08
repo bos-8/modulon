@@ -1,9 +1,15 @@
 // @file: server/src/modules/session/session.controller.ts
-import { Controller, Get, Delete, Param, Query, ParseUUIDPipe } from '@nestjs/common'
+import { Controller, Get, Delete, Param, Query, ParseUUIDPipe, UseGuards } from '@nestjs/common'
 import { SessionService } from './session.service'
 import { GetUserSessionsQueryDto, GetGroupedSessionsQueryDto } from './session.dto'
+import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
+import { RolesGuard } from '@/guards/roles.guard'
+import { Roles } from '@/decorators/roles.decorator'
+import { UserRole } from '@prisma/client'
 
 @Controller('admin/session')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.ROOT)
 export class SessionController {
   constructor(private readonly sessionService: SessionService) { }
 
@@ -28,6 +34,16 @@ export class SessionController {
   @Delete('/user/:userId')
   async deleteUserSessions(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.sessionService.deleteSessionsByUser(userId)
+  }
+
+  @Delete('/user/:userId/inactive')
+  async deleteExpiredSessionsByUser(@Param('userId', ParseUUIDPipe) userId: string) {
+    return this.sessionService.deleteExpiredSessionsByUser(userId)
+  }
+
+  @Delete('/inactive/all')
+  async deleteAllExpiredSessions() {
+    return this.sessionService.deleteAllExpiredSessions()
   }
 }
 // EOF

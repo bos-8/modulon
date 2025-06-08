@@ -54,9 +54,14 @@ export const deleteUserSessions = async (userId: string) => {
   await axios.delete(`/admin/session/user/${userId}`)
 }
 
-// ✅ Usuń nieaktywne sesje użytkownika
+// ✅ Usuń tylko wygasłe sesje użytkownika
 export const deleteUserInactiveSessions = async (userId: string) => {
   await axios.delete(`/admin/session/user/${userId}/inactive`)
+}
+
+// ✅ Usuń wszystkie wygasłe sesje globalnie
+export const deleteAllInactiveSessions = async () => {
+  await axios.delete(`/admin/session/inactive/all`)
 }
 
 // EOF

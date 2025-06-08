@@ -5,11 +5,13 @@ import { proxyRequest } from '@/lib/api/proxyRequest'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const url = new URL(req.url)
-  const query = url.search
-  return proxyRequest(req, `http://localhost:5000/admin/session/${params.id}${query}`, 'GET')
+  const query = await url.search
+  const { id } = await params
+  return proxyRequest(req, `http://localhost:5000/admin/session/${id}${query}`, 'GET')
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  return proxyRequest(req, `http://localhost:5000/admin/session/${params.id}`, 'DELETE')
+  const { id } = await params
+  return proxyRequest(req, `http://localhost:5000/admin/session/${id}`, 'DELETE')
 }
 // EOF

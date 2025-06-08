@@ -104,6 +104,12 @@ nest g module modules/admin/session
 nest g controller modules/admin/session
 nest g service modules/admin/session
 nest g class modules/admin/session/session.dto --flat
+
+# user/dashboard
+nest g module modules/user/dashboard
+nest g controller modules/user/dashboard
+nest g service modules/user/dashboard
+nest g class modules/user/dashboard/dashboard.dto --flat
 ```
 
 

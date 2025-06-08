@@ -1,4 +1,4 @@
-// @file: server/src/decorators/current-user.decorator.ts
+// @file: server/src/decorators/current.user.decorator.ts
 
 import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 import { JwtRequestUser } from '@/interfaces/jwt.request.user.interface'

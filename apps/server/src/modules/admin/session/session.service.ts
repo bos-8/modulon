@@ -24,8 +24,6 @@ export class SessionService {
         sortDirection === 'asc' ? 'asc' : 'desc',
     }
 
-    console.log({ page, limit, search, sort, userId })
-
     const where: Prisma.SessionWhereInput = {
       userId,
       ...(search && {
@@ -156,6 +154,23 @@ export class SessionService {
 
   async deleteSessionsByUser(userId: string) {
     return this.prisma.session.deleteMany({ where: { userId } })
+  }
+
+  async deleteExpiredSessionsByUser(userId: string) {
+    return this.prisma.session.deleteMany({
+      where: {
+        userId,
+        expires: { lt: new Date() },
+      },
+    })
+  }
+
+  async deleteAllExpiredSessions() {
+    return this.prisma.session.deleteMany({
+      where: {
+        expires: { lt: new Date() },
+      },
+    })
   }
 }
 // EOF

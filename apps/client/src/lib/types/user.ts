@@ -8,6 +8,12 @@ export enum UserRole {
   GUEST = 'GUEST',
 }
 
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER',
+}
+
 export type UserDto = {
   id: string
   email: string

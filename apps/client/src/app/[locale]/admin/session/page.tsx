@@ -2,10 +2,13 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { getGroupedSessions, deleteUserSessions, deleteUserInactiveSessions } from '@/lib/api/admin/session.api'
+import { getGroupedSessions, deleteUserSessions, deleteUserInactiveSessions, deleteAllInactiveSessions } from '@/lib/api/admin/session.api'
 import type { GroupedSessionByUserDto } from '@/lib/types/session'
+import Paginator from '@/components/ui/Paginator'
+import Table from '@/components/ui/Table'
+import type { TableColumn } from '@/lib/types/table'
 
 const DEFAULT_LIMIT = 10
 const ALLOWED_LIMITS = [1, 10, 25, 50, 100]
@@ -20,7 +23,6 @@ export default function AdminGroupedSessionsPage() {
   const [total, setTotal] = useState(0)
 
   const [filterInput, setFilterInput] = useState(searchParams.get('search') || '')
-  const [filter, setFilter] = useState('')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(DEFAULT_LIMIT)
 
@@ -46,19 +48,16 @@ export default function AdminGroupedSessionsPage() {
       updateUrlParams({ page: safePage, limit: safeLimit })
     }
 
-    setFilter(search)
     setPage(safePage)
     setLimit(safeLimit)
 
     return { search, page: safePage, limit: safeLimit, sort }
   }
 
-
   useEffect(() => {
     setLoading(true)
     const { search, page, limit, sort } = parseUrlParams()
     getGroupedSessions({ search, page, limit, sort })
-
       .then(res => {
         const maxPage = Math.max(1, Math.ceil(res.total / limit))
         if (page > maxPage) updateUrlParams({ page: maxPage })
@@ -91,7 +90,40 @@ export default function AdminGroupedSessionsPage() {
     updateUrlParams({ sort: `${field}:${newDir}`, page: 1 })
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const handleDeleteAllInactive = async () => {
+    const confirmed = confirm('Czy na pewno chcesz usunąć WSZYSTKIE nieaktywne sesje?')
+    if (!confirmed) return
+
+    try {
+      await deleteAllInactiveSessions()
+      router.refresh()
+    } catch {
+      alert('Nie udało się usunąć sesji globalnie.')
+    }
+  }
+
+  const columns: TableColumn<GroupedSessionByUserDto>[] = useMemo(() => [
+    {
+      label: '#',
+      field: 'index',
+      render: (_, i) => <span className="font-mono text-gray-500">{(page - 1) * limit + i + 1}</span>,
+    },
+    { label: 'Email', field: 'email', sortable: true },
+    { label: 'Rola', field: 'role', sortable: true },
+    { label: 'Sesje', field: 'sessionCount', sortable: true },
+    { label: 'Aktywne', field: 'activeSessionCount', sortable: true },
+    {
+      label: 'Akcje',
+      field: 'actions',
+      render: (user) => (
+        <div className="flex gap-1 flex-wrap">
+          <button onClick={() => router.push(`/admin/session/${user.userId}`)} className="px-3 py-1 text-xs font-medium rounded bg-blue-600 hover:bg-blue-700 text-white">Szczegóły</button>
+          <button onClick={() => handleDeleteInactive(user.userId)} className="px-3 py-1 text-xs font-medium rounded bg-yellow-500 hover:bg-yellow-600 text-white">Usuń nieaktywne</button>
+          <button onClick={() => handleDeleteAll(user.userId)} className="px-3 py-1 text-xs font-medium rounded bg-red-600 hover:bg-red-700 text-white">Usuń wszystkie</button>
+        </div>
+      ),
+    },
+  ], [page, limit])
 
   return (
     <div className="p-6">
@@ -99,7 +131,7 @@ export default function AdminGroupedSessionsPage() {
         Sesje użytkowników
       </h1>
 
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         <input
           type="text"
           placeholder="Szukaj po email..."
@@ -113,164 +145,40 @@ export default function AdminGroupedSessionsPage() {
         >
           Szukaj
         </button>
+        <button
+          onClick={handleDeleteAllInactive}
+          className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded"
+        >
+          Usuń wszystkie nieaktywne sesje
+        </button>
       </div>
 
-      {loading && <p className="text-gray-600 dark:text-gray-300">Ładowanie danych...</p>}
-      {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
 
-      {!loading && sessions.length === 0 && (
+      {loading ? (
+        <div className="flex justify-center items-center h-32">
+          <span className="text-gray-500 dark:text-gray-300">Ładowanie danych...</span>
+        </div>
+      ) : error ? (
+        <p className="text-red-600 dark:text-red-400">{error}</p>
+      ) : sessions.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400">Brak wyników.</p>
-      )}
-
-      {!loading && sessions.length > 0 && (
+      ) : (
         <>
-          <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold">
-                <tr>
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('email')}>
-                    Email {searchParams.get('sort')?.startsWith('email') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
-                  </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('role')}>
-                    Rola
-                  </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('sessionCount')}>
-                    Sesje {searchParams.get('sort')?.startsWith('sessionCount') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
-                  </th>
-                  <th className="px-4 py-3 cursor-pointer" onClick={() => toggleSort('activeSessionCount')}>
-                    Aktywne {searchParams.get('sort')?.startsWith('activeSessionCount') && (searchParams.get('sort')?.endsWith('asc') ? '▲' : '▼')}
-                  </th>
-                  <th className="px-4 py-3">Akcje</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {sessions.map((user, index) => (
-                  <tr key={user.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono">{(page - 1) * limit + index + 1}</td>
-                    <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{user.email}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.role}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.sessionCount}</td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{user.activeSessionCount}</td>
-                    <td className="px-4 py-3 flex flex-wrap gap-1">
-                      <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={() => router.push(`/admin/session/${user.userId}`)}
-                      >
-                        Szczegóły
-                      </button>
-                      <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                        onClick={() => handleDeleteInactive(user.userId)}
-                      >
-                        Usuń nieaktywne
-                      </button>
-                      <button
-                        className="px-3 py-1 text-xs font-medium rounded bg-red-600 hover:bg-red-700 text-white"
-                        onClick={() => handleDeleteAll(user.userId)}
-                      >
-                        Usuń wszystkie
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* PAGINATOR */}
-          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Strona {page} z {totalPages}
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <label className="text-sm text-gray-600 dark:text-gray-400">Na stronę:</label>
-              <select
-                className="px-2 py-1 border-none focus:outline-none rounded bg-white dark:bg-gray-800 text-sm"
-                value={limit}
-                onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}
-              >
-                {ALLOWED_LIMITS.map(v => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-
-              <button
-                disabled={page === 1}
-                onClick={() => updateUrlParams({ page: 1 })}
-                className="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-              >
-                First
-              </button>
-
-              <button
-                disabled={page === 1}
-                onClick={() => updateUrlParams({ page: page - 1 })}
-                className="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-              >
-                ←
-              </button>
-
-              {Array.from({ length: 5 }, (_, i) => {
-                const start = Math.max(1, Math.min(page - 2, totalPages - 4))
-                const p = start + i
-                if (p > totalPages) return null
-
-                const isCurrent = p === page
-
-                return isCurrent ? (
-                  <input
-                    key="input"
-                    type="number"
-                    min={1}
-                    max={totalPages}
-                    value={page}
-                    className="w-16 px-3 py-1 text-sm text-center bg-blue-600 text-white rounded outline-none border-0 ring-2 ring-blue-500 focus:ring-blue-400
-                    [&::-webkit-outer-spin-button]:appearance-none
-                    [&::-webkit-inner-spin-button]:appearance-none
-                    [appearance:textfield]"
-                    onChange={(e) => {
-                      const val = Number(e.target.value)
-                      if (!isNaN(val)) updateUrlParams({ page: val })
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const val = Number((e.target as HTMLInputElement).value)
-                        if (!isNaN(val) && val >= 1 && val <= totalPages) {
-                          updateUrlParams({ page: val })
-                        }
-                      }
-                    }}
-                  />
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => updateUrlParams({ page: p })}
-                    className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-                  >
-                    {p}
-                  </button>
-                )
-              })}
-
-              <button
-                disabled={page === totalPages}
-                onClick={() => updateUrlParams({ page: page + 1 })}
-                className="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-              >
-                →
-              </button>
-
-              <button
-                disabled={page === totalPages}
-                onClick={() => updateUrlParams({ page: totalPages })}
-                className="px-2 py-1 text-sm bg-gray-200 dark:bg-gray-700 rounded disabled:opacity-50"
-              >
-                Last
-              </button>
-            </div>
-          </div>
+          <Table
+            data={sessions}
+            columns={columns}
+            rowKey={(row) => row.userId}
+            sort={searchParams.get('sort') || ''}
+            onSortChange={toggleSort}
+          />
+          <Paginator
+            page={page}
+            total={total}
+            limit={limit}
+            allowedLimits={ALLOWED_LIMITS}
+            onPageChange={(newPage) => updateUrlParams({ page: newPage })}
+            onLimitChange={(newLimit) => updateUrlParams({ limit: newLimit, page: 1 })}
+          />
         </>
       )}
     </div>

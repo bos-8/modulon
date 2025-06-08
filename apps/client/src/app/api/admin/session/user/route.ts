@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { proxyRequest } from '@/lib/api/proxyRequest'
 
 export async function DELETE(req: NextRequest, { params }: { params: { userId: string } }) {
-  return proxyRequest(req, `http://localhost:5000/admin/session/user/${params.userId}`, 'DELETE')
+  const { userId } = await params
+  return proxyRequest(req, `http://localhost:5000/admin/session/user/${userId}`, 'DELETE')
 }
 // EOF

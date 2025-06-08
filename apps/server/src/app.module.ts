@@ -9,6 +9,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { UserModule } from './modules/admin/user/user.module';
 import { SessionModule } from './modules/admin/session/session.module';
+import { DashboardModule } from './modules/user/dashboard/dashboard.module';
 
 
 @Module({
@@ -35,7 +36,8 @@ import { SessionModule } from './modules/admin/session/session.module';
       inject: [ConfigService],
     }),
     UserModule,
-    SessionModule
+    SessionModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [
