@@ -8,11 +8,11 @@ import { proxyRequest } from '@/lib/api/proxyRequest'
 // }
 
 export async function GET(req: NextRequest) {
-  const targetUrl = `http://localhost:5000/admin/users${req.nextUrl.search}`
+  const targetUrl = `http://localhost:5000/admin/user${req.nextUrl.search}`
   return proxyRequest(req, targetUrl, 'GET')
 }
 
 export async function POST(req: NextRequest) {
-  return proxyRequest(req, 'http://localhost:5000/admin/users', 'POST')
+  return proxyRequest(req, 'http://localhost:5000/admin/user', 'POST')
 }
 // EOF

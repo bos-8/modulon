@@ -1,6 +1,6 @@
 // @file: server/src/modules/auth/dto/auth.dto.ts
 
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator'
+import { IsEmail, IsNotEmpty, MinLength, IsString, Length, IsUUID } from 'class-validator'
 
 export class LoginDto {
   @IsEmail()
@@ -17,4 +17,16 @@ export class RegisterDto {
   @MinLength(6)
   password: string
 }
+
+export class SendEmailVerificationDto {
+  @IsEmail()
+  email: string
+}
+
+export class VerifyEmailTokenDto {
+  @IsUUID()
+  token: string
+}
+
+
 // EOF

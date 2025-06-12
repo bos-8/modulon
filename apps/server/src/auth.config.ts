@@ -20,5 +20,11 @@ export default registerAs<AuthConfig>('auth', () => ({
   },
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
+  email_verification_ttl: {
+    minutes: parseInt(process.env.EMAIL_VERIFICATION_TTL || '15', 10),
+    seconds: parseInt(process.env.EMAIL_VERIFICATION_TTL || '15', 10) * 60,
+    miliSeconds: parseInt(process.env.EMAIL_VERIFICATION_TTL || '15', 10) * 60_000,
+  },
+  clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
 }))
 // EOF

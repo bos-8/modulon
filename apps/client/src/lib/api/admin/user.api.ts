@@ -1,16 +1,17 @@
 // @file: client/src/lib/api/admin/user.ts
 import api from '@/lib/api/axios'
-import { UpdateUserDto, CreateUserDto, UserDto } from '@/lib/types/user'
+import { UpdateUserDto, CreateUserDto, UserDto, UserWithPersonalDataDto } from '@/lib/types/user'
 
 export async function fetchAllUsers(): Promise<UserDto[]> {
   const res = await api.get('/admin/users')
   return res.data
 }
 
-export async function fetchUserById(id: string): Promise<UserDto> {
+export async function fetchUserById(id: string): Promise<UserWithPersonalDataDto> {
   const res = await api.get(`/admin/users/${id}`)
   return res.data
 }
+
 
 export async function createUser(data: CreateUserDto): Promise<any> {
   const res = await api.post('/admin/users', data)

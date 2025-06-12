@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchUsersPaginated, deleteUser } from '@/lib/api/admin/user.api'
 import { UserDto } from '@/lib/types/user'
+import Table from '@/components/ui/Table'
+import Paginator from '@/components/ui/Paginator'
 import { Throbber } from '@/components/ui/Throbber'
 import {
   ArrowDown,
@@ -28,7 +30,6 @@ export default function AdminUserListPage() {
   const [users, setUsers] = useState<UserDto[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [totalPages, setTotalPages] = useState(1)
   const [totalUsers, setTotalUsers] = useState(0)
 
   const page = parseInt(searchParams.get('page') || '1', 10)
@@ -63,46 +64,6 @@ export default function AdminUserListPage() {
     setFilterValues({ search: '', email: '', username: '', role: '' })
   }
 
-  const toggleSort = (field: string) => {
-    const next = sortField === field && sortDir === 'asc' ? 'desc' : 'asc'
-    updateSearchParams({ sort: `${field}:${next}` })
-  }
-
-  const renderSortIcon = (field: string) =>
-    sortField !== field ? null : sortDir === 'asc' ? <ArrowUp className="inline ml-1" /> : <ArrowDown className="inline ml-1" />
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true)
-        const res = await fetchUsersPaginated({
-          page,
-          limit,
-          sort,
-          ...filterValues,
-        })
-
-        if (res.totalPages === 0 && page !== 1) {
-          router.replace(`?page=1&limit=${limit}&sort=${sort}`)
-          return
-        }
-        if (res.totalPages > 0 && page > res.totalPages) {
-          router.replace(`?page=${res.totalPages}&limit=${limit}&sort=${sort}`)
-          return
-        }
-
-        setUsers(res.data)
-        setTotalUsers(res.total)
-        setTotalPages(res.totalPages)
-      } catch (err) {
-        console.error('[FETCH_USERS_ERROR]', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [page, limit, sort, searchParams.toString()])
-
   const handleDelete = async (id: string) => {
     if (!confirm('Czy na pewno chcesz usunąć tego użytkownika?')) return
     try {
@@ -116,7 +77,87 @@ export default function AdminUserListPage() {
     }
   }
 
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true)
+        const res = await fetchUsersPaginated({
+          page,
+          limit,
+          sort,
+          ...filterValues,
+        })
+
+        setUsers(res.data)
+        setTotalUsers(res.total)
+      } catch (err) {
+        console.error('[FETCH_USERS_ERROR]', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [page, limit, sort, searchParams.toString()])
+
+  const columns = [
+    {
+      field: 'index',
+      label: '#',
+      render: (_: any, i: number) => (page - 1) * limit + i + 1,
+    },
+    { field: 'email', label: 'Email', sortable: true },
+    { field: 'username', label: 'Username', sortable: true },
+    {
+      field: 'name',
+      label: 'Imię',
+      sortable: true,
+      render: (row: UserDto) => row.name || '-',
+    },
+    { field: 'role', label: 'Rola', sortable: true },
+    {
+      field: 'isActive',
+      label: 'Status',
+      render: (row: UserDto) =>
+        row.isActive && !row.isBlocked ? <Check2 className="text-green-500" /> : <XLg className="text-red-500" />,
+    },
+    {
+      field: 'isEmailConfirmed',
+      label: 'Email',
+      render: (row: UserDto) =>
+        row.isEmailConfirmed ? <Check2 className="text-green-500" /> : <XLg className="text-red-500" />,
+    },
+    {
+      field: 'createdAt',
+      label: 'Utworzono',
+      sortable: true,
+      render: (row: UserDto) => new Date(row.createdAt).toLocaleDateString(),
+    },
+    {
+      field: 'lastLoginAt',
+      label: 'Ostatnie logowanie',
+      sortable: true,
+      render: (row: UserDto) =>
+        row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : <DashLg className="text-gray-400" />,
+    },
+    {
+      field: 'actions',
+      label: 'Akcje',
+      render: (row: UserDto) => (
+        <div className="flex gap-2">
+          <Link href={`/admin/user/edit/${row.id}`} className="btn btn-xs btn-outline">
+            <Pencil className="inline mr-1" /> Edytuj
+          </Link>
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="btn btn-xs btn-outline btn-error"
+            disabled={deletingId === row.id}
+          >
+            {deletingId === row.id ? <Throbber /> : (<><Trash className="inline mr-1" />Usuń</>)}
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 space-y-6">
@@ -183,103 +224,31 @@ export default function AdminUserListPage() {
         </div>
       </div>
 
-      {/* Tabela */}
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="table w-full text-sm">
-          <thead className="bg-base-200 text-xs uppercase">
-            <tr>
-              <th>#</th>
-              <th onClick={() => toggleSort('email')} className="cursor-pointer">Email {renderSortIcon('email')}</th>
-              <th onClick={() => toggleSort('username')} className="cursor-pointer">Username {renderSortIcon('username')}</th>
-              <th onClick={() => toggleSort('name')} className="cursor-pointer">Imię {renderSortIcon('name')}</th>
-              <th onClick={() => toggleSort('role')} className="cursor-pointer">Rola {renderSortIcon('role')}</th>
-              <th>Status</th>
-              <th>Email</th>
-              <th onClick={() => toggleSort('createdAt')} className="cursor-pointer">Utworzono {renderSortIcon('createdAt')}</th>
-              <th onClick={() => toggleSort('lastLoginAt')} className="cursor-pointer">Ostatnie logowanie {renderSortIcon('lastLoginAt')}</th>
-              <th>Akcje</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={10} className="text-center p-4">
-                  <Throbber />
-                </td>
-              </tr>
-            ) : users.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="text-center p-4 text-base-content/60">
-                  Brak wyników.
-                </td>
-              </tr>
-            ) : (
-              users.map((user, i) => (
-                <tr key={user.id}>
-                  <td>{(page - 1) * limit + i + 1}</td>
-                  <td>{user.email}</td>
-                  <td>{user.username}</td>
-                  <td>{user.name || '-'}</td>
-                  <td>{user.role}</td>
-                  <td className="text-center">
-                    {user.isActive && !user.isBlocked ? <Check2 className="text-green-500" /> : <XLg className="text-red-500" />}
-                  </td>
-                  <td className="text-center">
-                    {user.isEmailConfirmed ? <Check2 className="text-green-500" /> : <XLg className="text-red-500" />}
-                  </td>
-                  <td className="text-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td className="text-xs">
-                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : <DashLg className="text-gray-400" />}
-                  </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <Link href={`/admin/user/edit/${user.id}`} className="btn btn-xs btn-outline">
-                        <Pencil className="inline mr-1" />
-                        Edytuj
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="btn btn-xs btn-outline btn-error"
-                        disabled={deletingId === user.id}
-                      >
-                        {deletingId === user.id ? <Throbber /> : (<><Trash className="inline mr-1" />Usuń</>)}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Tabela użytkowników */}
+      {loading ? (
+        <Throbber />
+      ) : (
+        <Table
+          data={users}
+          columns={columns}
+          sort={sort}
+          onSortChange={(field) => {
+            const next = sortField === field && sortDir === 'asc' ? 'desc' : 'asc'
+            updateSearchParams({ sort: `${field}:${next}` })
+          }}
+          rowKey={(row) => row.id}
+        />
+      )}
 
       {/* Paginacja */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm">Wierszy na stronę:</label>
-          <select
-            className="select select-sm select-bordered"
-            value={limit}
-            onChange={(e) => updateSearchParams({ limit: e.target.value })}
-          >
-            {LIMIT_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="join">
-          {pageNumbers.map((p) => (
-            <button
-              key={p}
-              onClick={() => updateSearchParams({ page: p.toString() })}
-              className={`join-item btn btn-sm ${p === page ? 'btn-active' : ''}`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Paginator
+        page={page}
+        limit={limit}
+        total={totalUsers}
+        allowedLimits={LIMIT_OPTIONS}
+        onPageChange={(p) => updateSearchParams({ page: p.toString() })}
+        onLimitChange={(l) => updateSearchParams({ limit: l.toString() })}
+      />
     </div>
   )
 }

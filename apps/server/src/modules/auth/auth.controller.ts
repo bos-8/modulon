@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { LoginDto, RegisterDto } from './auth.dto'
+import { LoginDto, RegisterDto, SendEmailVerificationDto, VerifyEmailTokenDto } from './auth.dto'
 import { Request, Response } from 'express'
 import { AuthResponse, MeResponse } from '@/types/auth.response'
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
@@ -37,23 +37,23 @@ export class AuthController {
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<AuthResponse> {
+  ): Promise<{ message: string }> {
     console.log('Registering user:', dto)
-    const result = await this.authService.register(dto)
-    this.authService.setAuthCookies(res, result.tokens)
-    return result
+    return await this.authService.register(dto)
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const result = await this.authService.login(dto)
+    const result = await this.authService.login(dto, req)
     this.authService.setAuthCookies(res, result.tokens)
     return result
   }
+
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -86,5 +86,20 @@ export class AuthController {
     this.authService.setAuthCookies(res, result.tokens)
     return result
   }
+
+  @Post('send-verification-code')
+  @HttpCode(HttpStatus.OK)
+  async sendEmailVerification(
+    @Body() dto: SendEmailVerificationDto,
+  ): Promise<void> {
+    return this.authService.sendEmailVerificationCode(dto.email)
+  }
+
+  @Post('verify-email-code')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailCode(@Body() dto: VerifyEmailTokenDto): Promise<void> {
+    return this.authService.verifyEmailToken(dto.token)
+  }
+
 }
 // EOF

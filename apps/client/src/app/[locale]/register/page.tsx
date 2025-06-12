@@ -27,7 +27,7 @@ export default function SignupPage() {
     const { confirmPassword, ...payload } = data
     try {
       await api.post('/auth/register', payload)
-      router.push('/login')
+      router.push(`/verify-email?email=${encodeURIComponent(payload.email)}`)
     } catch (err: any) {
       alert(err.response?.data?.message || t('Signup.errors.default'))
     }

@@ -1,4 +1,5 @@
 // @file: client/src/types/user.ts
+
 export enum UserRole {
   ROOT = 'ROOT',
   SYSTEM = 'SYSTEM',
@@ -45,4 +46,44 @@ export type CreateUserDto = {
   password: string
   role?: UserRole | UserRole.USER
 }
-// EFO
+
+// === PersonalData ===
+
+export type PersonalDataDto = {
+  id: string
+  userId: string
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  phoneNumber?: string
+  address?: string
+  city?: string
+  zipCode?: string
+  country?: string
+  birthDate?: string
+  gender?: Gender
+  canUserEdit: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type UpdatePersonalDataDto = {
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  phoneNumber?: string
+  address?: string
+  city?: string
+  zipCode?: string
+  country?: string
+  birthDate?: string
+  gender?: Gender
+}
+
+// === Widok zbiorczy (używany przy edycji konta) ===
+
+export type UserWithPersonalDataDto = {
+  user: UserDto
+  personalData?: PersonalDataDto | null
+}
+// EOF

@@ -1,8 +1,8 @@
 // @file: server/src/modules/admin/user/user.dto.ts
 
 import { UserRole } from '@prisma/client'
-import { Transform } from 'class-transformer'
-import { IsBoolean, IsEmail, IsEnum, IsNumber, IsOptional, IsString, MinLength, IsBooleanString, IsInt, Matches, Min } from 'class-validator'
+import { Transform, Type } from 'class-transformer'
+import { IsBoolean, IsEmail, IsEnum, ValidateNested, IsNumber, IsOptional, IsString, MinLength, IsBooleanString, IsInt, Matches, Min } from 'class-validator'
 
 export class UserDto {
   id: string
@@ -16,6 +16,7 @@ export class UserDto {
   failedLoginAttempts: number
   lastLoginAt: Date | null
   createdAt: Date
+  isEmailConfirmed: boolean
 }
 
 export class PaginatedUsersResponse {
@@ -25,6 +26,25 @@ export class PaginatedUsersResponse {
   limit: number
   totalPages: number
 }
+
+export class PersonalDataDto {
+  id: string
+  userId: string
+  firstName?: string
+  middleName?: string
+  lastName?: string
+  phoneNumber?: string
+  address?: string
+  city?: string
+  zipCode?: string
+  country?: string
+  birthDate?: Date
+  gender?: string
+  canUserEdit: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
 
 export class UpdateUserDto {
   @IsOptional()
@@ -58,6 +78,10 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   failedLoginAttempts?: number
+
+  @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value) : undefined))
+  emailVerified?: Date
 }
 
 export class CreateUserDto {
@@ -96,4 +120,89 @@ export class GetUsersQueryDto {
   @IsOptional() @IsEnum(UserRole) @Transform(({ value }) => (value === '' ? undefined : value)) role?: UserRole
   @IsOptional() @IsBooleanString() @Transform(({ value }) => (value === '' ? undefined : value)) isBlocked?: string
 }
+
+export class UpdatePersonalDataDto {
+  @IsOptional()
+  @IsString()
+  firstName?: string
+
+  @IsOptional()
+  @IsString()
+  middleName?: string
+
+  @IsOptional()
+  @IsString()
+  lastName?: string
+
+  @IsOptional()
+  @Matches(/^$|^[+]?[\d\s\-]+$/, { message: 'Niepoprawny numer telefonu' })
+  phoneNumber?: string
+
+
+  @IsOptional()
+  @IsString()
+  address?: string
+
+  @IsOptional()
+  @IsString()
+  city?: string
+
+  @IsOptional()
+  @IsString()
+  zipCode?: string
+
+  @IsOptional()
+  @IsString()
+  country?: string
+
+  @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value) : undefined))
+  birthDate?: Date
+
+  @IsOptional()
+  @IsString()
+  gender?: string
+}
+
+export class UserWithPersonalDataDto {
+  user: UserDto
+  personalData?: PersonalDataDto
+}
+
+
+export class UpdateUserWithPersonalDataDto {
+  @IsOptional()
+  @IsString()
+  name?: string
+
+  @IsOptional()
+  @IsString()
+  username?: string
+
+  @IsOptional()
+  @IsString()
+  password?: string
+
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  isBlocked?: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  isEmailConfirmed?: boolean
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdatePersonalDataDto)
+  personalData?: UpdatePersonalDataDto
+}
+
 // EOF

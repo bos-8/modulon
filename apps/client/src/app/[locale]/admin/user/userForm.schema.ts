@@ -14,18 +14,20 @@ export const userFormSchema = z.object({
   name: z.string().optional(),
   password: z.string().min(6, 'Hasło musi mieć co najmniej 6 znaków'),
   confirmPassword: z.string().min(6, 'Powtórz hasło'),
-  role: z.nativeEnum(UserRole).default(UserRole.USER),
+  role: z.nativeEnum(UserRole).default(UserRole.USER).transform((val) => val as UserRole),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Hasła muszą być identyczne',
   path: ['confirmPassword'],
 })
 
+
 /**
- * Schemat formularza edycji użytkownika (zgodny z UpdateUserDto)
- * - Hasło opcjonalne (nie ma pola confirm)
- * - Wymagane pola rola, isActive, isBlocked
+ * Schemat formularza edycji użytkownika (zgodny z UpdateUserDto + PersonalDataDto)
+ * - Hasło opcjonalne
+ * - Wszystkie pola są opcjonalne
  */
 export const userEditFormSchema = z.object({
+  // dane konta
   name: z.string().optional(),
   username: z.string().optional(),
   password: z.string().optional(),
@@ -34,6 +36,18 @@ export const userEditFormSchema = z.object({
   isActive: z.boolean().optional(),
   isBlocked: z.boolean().optional(),
   isEmailConfirmed: z.boolean().optional(),
+
+  // dane personalne
+  firstName: z.string().optional(),
+  middleName: z.string().optional(),
+  lastName: z.string().optional(),
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+  birthDate: z.string().optional(), // lub z.coerce.date() jeśli parsujesz jako Date
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  zipCode: z.string().optional(),
+  country: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Hasła muszą być identyczne',
   path: ['confirmPassword'],
@@ -41,4 +55,5 @@ export const userEditFormSchema = z.object({
 
 export type UserFormData = z.infer<typeof userFormSchema>
 export type UserEditFormData = z.infer<typeof userEditFormSchema>
+
 // EOF

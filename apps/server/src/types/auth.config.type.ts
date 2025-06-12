@@ -15,6 +15,12 @@ export type AuthConfig = {
     limit: number
   }
   nodeEnv: string,
-  isProd: boolean
+  isProd: boolean,
+  email_verification_ttl: {
+    minutes: number
+    seconds: number
+    miliSeconds: number
+  },
+  clientUrl: string
 }
 // EOF

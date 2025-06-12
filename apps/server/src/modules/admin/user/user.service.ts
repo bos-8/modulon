@@ -1,8 +1,17 @@
 // @file: server/src/modules/admin/user/user.service.ts
 
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '@/database/prisma.service'
-import { UserDto, UpdateUserDto, CreateUserDto, GetUsersQueryDto } from './user.dto'
+import {
+  UserDto,
+  UpdateUserDto,
+  CreateUserDto,
+  GetUsersQueryDto,
+  UpdatePersonalDataDto,
+  PersonalDataDto,
+  UserWithPersonalDataDto,
+  UpdateUserWithPersonalDataDto
+} from './user.dto'
 import {
   UserNotFoundException,
   SelfModificationForbiddenException,
@@ -16,17 +25,23 @@ import * as argon2 from 'argon2'
 export class UserService {
   constructor(private readonly prisma: PrismaService) { }
 
-  // async getAllUsers(): Promise<UserDto[]> {
-  //   const users = await this.prisma.user.findMany({
-  //     orderBy: { createdAt: 'desc' },
-  //   })
-  //   return users.map(this.toDto)
-  // }
-
   async getUserById(id: string): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({ where: { id } })
     if (!user) throw new UserNotFoundException()
     return this.toDto(user)
+  }
+
+  async getUserWithPersonalData(id: string): Promise<UserWithPersonalDataDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { personalData: true },
+    })
+    if (!user) throw new UserNotFoundException()
+
+    return {
+      user: this.toDto(user),
+      personalData: user.personalData ? this.toPersonalDto(user.personalData) : null,
+    }
   }
 
   async getUsers(query: GetUsersQueryDto) {
@@ -48,7 +63,6 @@ export class UserService {
 
     const skip = (page - 1) * limit
 
-    // dynamiczne warunki Prisma
     const where: any = {
       ...(search && {
         OR: [
@@ -65,7 +79,6 @@ export class UserService {
       }),
     }
 
-    // console.log('Querying users with conditions:', where);
     const [users, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
         skip,
@@ -85,35 +98,23 @@ export class UserService {
     }
   }
 
-  // async getUsers(query: GetUsersQueryDto) {
-  //   const { page = 1, limit = 25, sort = 'createdAt:desc' } = query
-  //   const [field, direction] = sort.split(':')
+  async updateUserCombined(
+    id: string,
+    dto: UpdateUserWithPersonalDataDto,
+    current: JwtRequestUser,
+  ): Promise<{ message: string }> {
+    const { personalData, ...userFields } = dto
 
-  //   const validSortFields = ['email', 'username', 'name', 'role', 'createdAt', 'lastLoginAt']
-  //   const safeField = validSortFields.includes(field) ? field : 'createdAt'
-  //   const safeDirection = direction === 'asc' ? 'asc' : 'desc'
+    // Aktualizacja usera
+    await this.updateUser(id, userFields, current)
 
-  //   const skip = (page - 1) * limit
+    // Aktualizacja danych personalnych (jeśli przesłane)
+    if (personalData) {
+      await this.updatePersonalData(id, personalData)
+    }
 
-  //   const [users, total] = await this.prisma.$transaction([
-  //     this.prisma.user.findMany({
-  //       skip,
-  //       take: limit,
-  //       orderBy: {
-  //         [safeField]: safeDirection,
-  //       },
-  //     }),
-  //     this.prisma.user.count(),
-  //   ])
-
-  //   return {
-  //     data: users.map(this.toDto),
-  //     total,
-  //     page,
-  //     limit,
-  //     totalPages: Math.ceil(total / limit),
-  //   }
-  // }
+    return { message: 'Dane użytkownika zostały zaktualizowane.' }
+  }
 
 
   async updateUser(
@@ -121,30 +122,36 @@ export class UserService {
     dto: UpdateUserDto,
     current: JwtRequestUser,
   ): Promise<{ message: string }> {
-    if (id === current.id) {
-      throw new SelfModificationForbiddenException('role-change')
-    }
+
 
     const existing = await this.prisma.user.findUnique({ where: { id } })
     if (!existing) throw new UserNotFoundException()
 
-    if (
-      dto.role &&
-      this.isRoleHigher(dto.role, current.role)
-    ) {
+    const isSelf = id === current.id
+    const isRoleChange = dto.role !== undefined && dto.role !== existing.role
+    const isTryingToSetHigherRole = dto.role && this.isRoleHigher(dto.role, current.role)
+
+    if (isSelf && isRoleChange) {
+      throw new SelfModificationForbiddenException('role-change')
+    }
+
+    if (!isSelf && isTryingToSetHigherRole) {
       throw new UserInvalidRoleChangeException()
     }
 
-    // Mapuj wartości tylko jeśli są niepuste ('' ignorujemy)
+
     const updatedData: UpdateUserDto = {
       name: dto.name && dto.name.trim() !== '' ? dto.name : existing.name,
       username: dto.username && dto.username.trim() !== '' ? dto.username : existing.username,
-      password: dto.password && dto.password.trim() !== '' ? await argon2.hash(dto.password) : undefined, // tylko jeśli hasło
+      password: dto.password && dto.password.trim() !== '' ? await argon2.hash(dto.password) : undefined,
       role: dto.role ?? existing.role,
       isActive: dto.isActive ?? existing.isActive,
       isBlocked: dto.isBlocked ?? existing.isBlocked,
       isEmailConfirmed: dto.isEmailConfirmed ?? existing.isEmailConfirmed,
       failedLoginAttempts: dto.failedLoginAttempts ?? existing.failedLoginAttempts,
+      ...(dto.isEmailConfirmed && !existing.isEmailConfirmed && {
+        emailVerified: new Date(),
+      })
     }
 
     const updated = await this.prisma.user.update({
@@ -155,12 +162,58 @@ export class UserService {
     return { message: `Użytkownik ${updated.email} został zaktualizowany.` }
   }
 
+  async updatePersonalData(userId: string, dto: UpdatePersonalDataDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new UserNotFoundException()
+
+    // Import Gender enum from @prisma/client at the top if not already imported
+    // import { UserRole, Gender } from '@prisma/client'
+
+    const cleaned: UpdatePersonalDataDto = {
+      firstName: dto.firstName?.trim() || undefined,
+      middleName: dto.middleName?.trim() || undefined,
+      lastName: dto.lastName?.trim() || undefined,
+      gender: dto.gender ? dto.gender as any : undefined, // We'll map it below
+      birthDate:
+        typeof dto.birthDate === 'string'
+          ? typeof dto.birthDate === 'string' && dto.birthDate && dto.birthDate !== '' && !isNaN(Date.parse(dto.birthDate))
+            ? new Date(dto.birthDate)
+            : undefined
+          : dto.birthDate instanceof Date && !isNaN(dto.birthDate.getTime())
+            ? dto.birthDate
+            : undefined,
+      phoneNumber: dto.phoneNumber?.trim() || undefined,
+      address: dto.address?.trim() || undefined,
+      city: dto.city?.trim() || undefined,
+      zipCode: dto.zipCode?.trim() || undefined,
+      country: dto.country?.trim() || undefined,
+    }
+
+    // Map gender string to Gender enum if present
+    const genderEnum = dto.gender ? (dto.gender as any) : undefined;
+
+    await this.prisma.personalData.upsert({
+      where: { userId },
+      update: {
+        ...cleaned,
+        gender: genderEnum,
+      },
+      create: {
+        ...cleaned,
+        gender: genderEnum,
+        userId
+      },
+    })
+
+    return { message: 'Dane personalne zostały zapisane.' }
+  }
+
 
   async blockUser(id: string, current: JwtRequestUser): Promise<{ message: string }> {
     if (id === current.id) throw new SelfModificationForbiddenException('block')
 
-    const existing = await this.prisma.user.findUnique({ where: { id } })
-    if (!existing) throw new UserNotFoundException()
+    const user = await this.prisma.user.findUnique({ where: { id } })
+    if (!user) throw new UserNotFoundException()
 
     const updated = await this.prisma.user.update({
       where: { id },
@@ -181,16 +234,13 @@ export class UserService {
     return { message: 'Użytkownik został usunięty.' }
   }
 
-  async createUser(dto: CreateUserDto, current: JwtRequestUser,): Promise<{ message: string }> {
-    if (
-      dto.role &&
-      this.isRoleHigher(dto.role, current.role)
-    ) {
+  async createUser(dto: CreateUserDto, current: JwtRequestUser): Promise<{ message: string }> {
+    if (dto.role && this.isRoleHigher(dto.role, current.role)) {
       throw new UserInvalidRoleChangeException()
     }
+
     const hashedPassword = await argon2.hash(dto.password)
-    console.log(`Creating user with email: ${dto.email}`)
-    console.log(dto)
+
     const created = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -214,9 +264,30 @@ export class UserService {
       isActive: user.isActive,
       isBlocked: user.isBlocked,
       twoFactorEnabled: user.twoFactorEnabled,
+      isEmailConfirmed: user.isEmailConfirmed,
       failedLoginAttempts: user.failedLoginAttempts,
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
+    }
+  }
+
+  private toPersonalDto(pd: any): PersonalDataDto {
+    return {
+      id: pd.id,
+      userId: pd.userId,
+      firstName: pd.firstName,
+      middleName: pd.middleName,
+      lastName: pd.lastName,
+      phoneNumber: pd.phoneNumber,
+      address: pd.address,
+      city: pd.city,
+      zipCode: pd.zipCode,
+      country: pd.country,
+      birthDate: pd.birthDate,
+      gender: pd.gender,
+      canUserEdit: pd.canUserEdit,
+      createdAt: pd.createdAt,
+      updatedAt: pd.updatedAt,
     }
   }
 

@@ -4,6 +4,8 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
+  BadRequestException
 } from '@nestjs/common'
 import { PrismaService } from '@/database/prisma.service'
 import { ConfigService } from '@nestjs/config'
@@ -13,6 +15,7 @@ import { JwtService } from '@nestjs/jwt'
 import { Response, Request } from 'express'
 import { AuthResponse } from '@/types/auth.response'
 import { v4 as uuid } from 'uuid'
+import { Logger } from '@nestjs/common'
 
 @Injectable()
 export class AuthService {
@@ -22,7 +25,7 @@ export class AuthService {
     private readonly config: ConfigService,
   ) { }
 
-  async register(dto: RegisterDto): Promise<AuthResponse> {
+  async register(dto: RegisterDto): Promise<{ message: string }> {
     const userExists = await this.prisma.user.findUnique({ where: { email: dto.email } })
     if (userExists) throw new ConflictException('User already exists')
 
@@ -36,27 +39,46 @@ export class AuthService {
       },
     })
 
-    console.log('[REGISTER]', user) // <<< log the registered user: TODEL
+    await this.sendEmailVerificationCode(user.email)
 
-    return this.generateTokensAndSession(user.id, user.email, user.role)
+    return { message: `Wysłano kod na ${dto.email}` }
   }
 
-  async login(dto: LoginDto): Promise<AuthResponse> {
+
+  async login(dto: LoginDto, req: Request): Promise<AuthResponse> {
     console.log('[LOGIN]', dto)
 
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } })
-    if (!user) throw new UnauthorizedException('Invalid credentials')
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: dto.email,
+        isEmailConfirmed: true,
+        NOT: { emailVerified: null },
+      },
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials or email not verified')
+    }
 
     const isMatch = await argon2.verify(user.password, dto.password)
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials')
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    })
 
-    return this.generateTokensAndSession(user.id, user.email, user.role)
+    return this.generateTokensAndSession(user.id, user.email, user.role, req)
   }
+
+
 
   private async generateTokensAndSession(
     userId: string,
     email: string,
     role: string,
+    req: Request,
   ): Promise<AuthResponse> {
     const sessionId = uuid()
 
@@ -77,15 +99,17 @@ export class AuthService {
       },
     )
 
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress
+    const userAgent = req.headers['user-agent'] || 'unknown'
+
     await this.prisma.session.create({
       data: {
         id: sessionId,
         sessionToken: refreshToken,
         userId,
         expires: new Date(Date.now() + this.config.get('auth.refreshToken.expiresInMs')),
-        // opcjonalnie:
-        // ip: req.ip,
-        // deviceInfo: getDeviceInfo(req),
+        ip: typeof ip === 'string' ? ip : Array.isArray(ip) ? ip[0] : 'unknown',
+        deviceInfo: userAgent,
       },
     })
 
@@ -215,5 +239,51 @@ export class AuthService {
       },
     }
   }
+
+  async sendEmailVerificationCode(email: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } })
+    if (!user) throw new NotFoundException('User not found')
+
+    const token = uuid()
+    const expires = new Date(Date.now() + this.config.get('auth.email_verification_ttl.miliSeconds'))
+
+    await this.prisma.verificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        type: 'EMAIL_CONFIRMATION',
+        expires,
+      },
+    })
+
+    Logger.debug(`${email} >>> ${this.config.get('auth.clientUrl')}/verify-email-link?token=${token}`, 'EMAIL CODE')
+    // TODO: Send email with code via email service
+  }
+
+  async verifyEmailToken(token: string): Promise<void> {
+    const tokenEntry = await this.prisma.verificationToken.findFirst({
+      where: {
+        token,
+        type: 'EMAIL_CONFIRMATION',
+        expires: { gte: new Date() },
+      },
+      include: { user: true },
+    })
+
+    if (!tokenEntry) throw new BadRequestException('Invalid or expired token')
+
+    await this.prisma.user.update({
+      where: { id: tokenEntry.userId },
+      data: {
+        isEmailConfirmed: true,
+        emailVerified: new Date(),
+      },
+    })
+
+    await this.prisma.verificationToken.delete({
+      where: { id: tokenEntry.id },
+    })
+  }
+
 }
 // EOF

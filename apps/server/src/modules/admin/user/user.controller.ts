@@ -1,90 +1,86 @@
 // @file: server/src/modules/admin/user/user.controller.ts
 
 import {
-  Body,
   Controller,
   Get,
   Param,
+  Query,
   Patch,
   Post,
-  UseGuards,
-  ParseUUIDPipe,
+  Body,
   Delete,
-  ForbiddenException,
-  Query
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common'
 import { UserService } from './user.service'
-import { Roles } from '@/decorators/roles.decorator'
-import { UserRole } from '@prisma/client'
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { RolesGuard } from '@/guards/roles.guard'
+import { Roles } from '@/decorators/roles.decorator'
 import {
   CreateUserDto,
-  UpdateUserDto,
-  UserDto,
   GetUsersQueryDto,
-  PaginatedUsersResponse
+  UpdateUserDto,
+  UpdatePersonalDataDto,
+  UserDto,
+  PersonalDataDto,
+  UserWithPersonalDataDto,
+  PaginatedUsersResponse,
+  UpdateUserWithPersonalDataDto
 } from './user.dto'
+import { UserRole } from '@prisma/client'
 import { CurrentUser } from '@/decorators/current.user.decorator'
 import { JwtRequestUser } from '@/interfaces/jwt.request.user.interface'
 
-@Controller('admin/users')
+@Controller('admin/user')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.ROOT)
 export class UserController {
   constructor(private readonly userService: UserService) { }
-
-  // @Get()
-  // async getAllUsers(): Promise<UserDto[]> {
-  //   return this.userService.getAllUsers()
-  // }
-
-  @Get(':id')
-  async getUserById(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<UserDto> {
-    return this.userService.getUserById(id)
-  }
 
   @Get()
   async getUsers(@Query() query: GetUsersQueryDto): Promise<PaginatedUsersResponse> {
     return this.userService.getUsers(query)
   }
 
+  @Get(':id')
+  async getUserWithPersonalData(@Param('id') id: string): Promise<UserWithPersonalDataDto> {
+    return this.userService.getUserWithPersonalData(id)
+  }
+
   @Post()
   async createUser(
     @Body() dto: CreateUserDto,
-    @CurrentUser() user: JwtRequestUser,
+    @CurrentUser() current: JwtRequestUser,
   ): Promise<{ message: string }> {
-    return this.userService.createUser(dto, user)
+    return this.userService.createUser(dto, current)
   }
 
   @Patch(':id')
-  async updateUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateUserDto,
-    @CurrentUser() user: JwtRequestUser,
+  async updateUserCombined(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserWithPersonalDataDto,
+    @CurrentUser() current: JwtRequestUser,
   ): Promise<{ message: string }> {
-    return this.userService.updateUser(id, dto, user)
+    return this.userService.updateUserCombined(id, dto, current)
   }
 
+
   @Patch(':id/block')
-  async softDeleteUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtRequestUser,
+  async blockUser(
+    @Param('id') id: string,
+    @CurrentUser() current: JwtRequestUser,
   ): Promise<{ message: string }> {
-    return this.userService.blockUser(id, user)
+    return this.userService.blockUser(id, current)
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: JwtRequestUser,
-  ): Promise<{ message: string }> {
-    if (user.id === id) {
-      throw new ForbiddenException('Nie możesz usunąć samego siebie.')
-    }
-    return this.userService.deleteUser(id, user)
+    @Param('id') id: string,
+    @CurrentUser() current: JwtRequestUser,
+  ): Promise<void> {
+    await this.userService.deleteUser(id, current)
   }
 }
 // EOF

@@ -24,26 +24,27 @@ enum Gender {
 }
 
 model User {
-  id                  String          @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String?
   username            String?
-  email               String          @unique
+  email               String              @unique
   emailVerified       DateTime?
   image               String?
-  password            String          @db.Text
-  isActive            Boolean         @default(true)
-  isBlocked           Boolean         @default(false)
-  isEmailConfirmed    Boolean         @default(false)
-  twoFactorEnabled    Boolean         @default(false)
-  failedLoginAttempts Int             @default(0)
+  password            String              @db.Text
+  isActive            Boolean             @default(true)
+  isBlocked           Boolean             @default(false)
+  isEmailConfirmed    Boolean             @default(false)
+  twoFactorEnabled    Boolean             @default(false)
+  failedLoginAttempts Int                 @default(0)
   lastLoginAt         DateTime?
-  role                UserRole        @default(USER)
+  role                UserRole            @default(USER)
   accounts            Account[]
   sessions            Session[]
   Authenticator       Authenticator[]
   personalData        PersonalData?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  VerificationToken   VerificationToken[]
 
   @@index([email])
   @@index([isActive, role])
@@ -109,12 +110,23 @@ model Session {
   @@index([ip])
 }
 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
+enum VerificationTokenType {
+  EMAIL_CONFIRMATION
+  PASSWORD_RESET
+  TWO_FACTOR
+}
 
-  @@unique([identifier, token])
+model VerificationToken {
+  id         String                @id @default(uuid())
+  userId     String
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       VerificationTokenType
+  identifier String?
+  token      String                @unique
+  expires    DateTime
+  createdAt  DateTime              @default(now())
+
+  @@index([userId, type])
 }
 
 model Authenticator {

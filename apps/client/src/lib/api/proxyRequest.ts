@@ -5,9 +5,9 @@ export async function proxyRequest(req: Request, targetUrl: string, method = 'PO
 
   proxyHeaders.set('Content-Type', originalHeaders.get('content-type') || 'application/json')
 
-  // console.log('[PROXY] Forwarding:', method, targetUrl)
-  // console.log('[PROXY] Headers:', [...proxyHeaders.entries()])
-  // console.log('[PROXY] Body:', rawBody)
+  console.log('[PROXY] Forwarding:', method, targetUrl)
+  console.log('[PROXY] Headers:', [...proxyHeaders.entries()])
+  console.log('[PROXY] Body:', rawBody)
 
   const backendResponse = await fetch(targetUrl, {
     method,
