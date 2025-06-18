@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { UserRole } from '@modulon/types';
 
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'Hello World!';
+    return `Hello World! User Role: ${UserRole.ADMIN}`;
   }
 }

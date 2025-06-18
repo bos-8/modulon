@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import Navbar from "../../components/layout/NavbarServer";
+import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import { themeInitScript } from "@/lib/theme/theme-init";
 import "../../styles/globals.css";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { AuthProvider } from '@/lib/auth/auth.context'
-import { AuthRedirectWatcher } from "@/lib/auth/AuthRedirectWatcher";
 
 export const metadata: Metadata = {
   title: "MODULON",
@@ -32,12 +30,9 @@ export default async function LocaleLayout({
       </head>
       <body className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <NextIntlClientProvider>
-          <AuthProvider>
-            <Navbar />
-            <AuthRedirectWatcher />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </AuthProvider>
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>

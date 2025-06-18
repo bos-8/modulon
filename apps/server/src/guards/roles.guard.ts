@@ -1,13 +1,9 @@
 // @file: server/src/guards/roles.guard.ts
 
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-} from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { ROLES_KEY } from '@/decorators/roles.decorator'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@modulon/database'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,4 +20,3 @@ export class RolesGuard implements CanActivate {
     return requiredRoles.includes(user.role)
   }
 }
-// EOF

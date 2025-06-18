@@ -5,11 +5,9 @@
     "projectDescription": "<strong>Modulon</strong> to skalowalna i bezpieczna platforma do zarządzania użytkownikami i autoryzacją, oparta na <strong>Next.js</strong> (frontend) oraz <strong> NestJS + Prisma</strong> (backend). System wykorzystuje nowoczesne podejście do zarządzania sesjami, access i refresh tokenami oraz przygotowany jest pod przyszłą konteneryzację, cache, load balancing i migrację do PostgreSQL. Architektura oparta jest o monorepo zgodne z najlepszymi praktykami."
   },
   "Navbar": {
-    "home": "Strona główna",
     "dashboard": "Panel",
     "signup": "Zarejestruj się",
-    "login": "Zaloguj się",
-    "logout": "Wyloguj się"
+    "login": "Zaloguj się"
   },
   "Footer": {
     "rights": "Wszelkie prawa zastrzeżone."
@@ -66,9 +64,6 @@
   },
   "DashboardPage": {
     "title": "Panel użytkownika",
-    "description": "Witaj w swoim panelu. Tutaj w przyszłości znajdziesz skróty, statystyki i zarządzanie kontem.",
-    "roleLabel": "Twoja rola:",
-    "emailLabel": "Twój email",
-    "idLabel": "Twój ID"
+    "description": "Witaj w swoim panelu. Tutaj w przyszłości znajdziesz skróty, statystyki i zarządzanie kontem."
   }
 }
