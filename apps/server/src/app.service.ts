@@ -1,3 +1,4 @@
+// @file: server/src/app.service.ts
 import { Injectable } from '@nestjs/common';
 import { UserRole } from '@modulon/types';
 

@@ -1,3 +1,4 @@
+// @file: client/src/lib/theme/theme-init.ts
 export const themeInitScript = `
   (() => {
     const theme = localStorage.getItem("theme");

@@ -1,4 +1,4 @@
-// @file: apps/server/src/config/server.type.ts
+// @file: server/src/config/server.type.ts
 export type ServerConfig = {
   nodeEnv: string;
   port: number;
@@ -22,6 +22,7 @@ export type ServerConfig = {
   emailVerificationTTL: {
     minutes: number;
     seconds: number;
+    milliseconds: number;
   },
   payload: {
     header: {

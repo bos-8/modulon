@@ -31,6 +31,10 @@
     "email": "Email",
     "password": "Hasło",
     "submit": "Zaloguj",
+    "success": {
+      "title": "Sukces",
+      "message": "Zalogowano pomyślnie!"
+    },
     "errors": {
       "email": {
         "required": "Email jest wymagany",
@@ -41,7 +45,7 @@
       }
     }
   },
-  "Signup": {
+  "Register": {
     "title": "Rejestracja",
     "email": "Email",
     "password": "Hasło",
@@ -65,5 +69,18 @@
   "DashboardPage": {
     "title": "Panel użytkownika",
     "description": "Witaj w swoim panelu. Tutaj w przyszłości znajdziesz skróty, statystyki i zarządzanie kontem."
+  },
+  "VerifyEmail": {
+    "title": "Weryfikacja adresu e-mail",
+    "sentTo": "Wysłano link weryfikacyjny na",
+    "verifying": "Trwa weryfikacja...",
+    "success": "Adres e-mail został zweryfikowany!",
+    "resend": "Wyślij ponownie link",
+    "resending": "Wysyłanie...",
+    "resent": "Link weryfikacyjny został wysłany",
+    "errors": {
+      "default": "Nie udało się zweryfikować adresu e-mail.",
+      "resendFailed": "Nie udało się wysłać wiadomości."
+    }
   }
 }

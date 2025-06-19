@@ -1,4 +1,4 @@
-// @file: apps/server/src/config/server.config.ts
+// @file: server/src/config/server.config.ts
 import { registerAs } from '@nestjs/config';
 import type { ServerConfig } from './server.type';
 
@@ -25,6 +25,7 @@ export default registerAs<ServerConfig>('server', () => ({
   emailVerificationTTL: {
     minutes: parseInt(process.env.EMAIL_CONFIRMATION_TTL || '15', 10),
     seconds: parseInt(process.env.EMAIL_CONFIRMATION_TTL || '15', 10) * 60,
+    milliseconds: parseInt(process.env.EMAIL_CONFIRMATION_TTL || '15', 10) * 60_000,
   },
   payload: {
     header: {

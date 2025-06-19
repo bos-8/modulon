@@ -1,10 +1,12 @@
+// @file: server/src/modules/auth/auth.controller.ts
 import { Controller, Get, Post, Body, HttpCode, HttpStatus, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, SendEmailVerificationDto, VerifyEmailTokenDto } from './auth.dto';
 import { Request, Response } from 'express';
-import { AuthResponse, MeResponse as SessionResponse } from '@/interfaces/auth.interface';
+import { AuthResponse } from '@/interfaces/auth.interface';
 import { JwtAuthGuard } from '@/guards/jwt-auth.guard'
 import { JwtRequestUser } from '@/interfaces/jwt-request-user.interface';
+import { SessionResponse } from '@modulon/types';
 
 // Extend Express Request interface to include 'user'
 declare module 'express-serve-static-core' {
@@ -47,6 +49,7 @@ export class AuthController {
       email: user.email,
       role: user.role,
       exp: user.exp,
+      iat: user.iat
     }
   }
 
@@ -55,7 +58,7 @@ export class AuthController {
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response
-  ): Promise<void> {
+  ): Promise<{ message: string }> {
     return await this.authService.logout(req, res)
   }
 
@@ -70,7 +73,7 @@ export class AuthController {
     return result
   }
 
-  @Post('send-verification-token')
+  @Post('send-verification-code')
   @HttpCode(HttpStatus.OK)
   async sendEmailVerification(
     @Body() dto: SendEmailVerificationDto,
@@ -78,7 +81,7 @@ export class AuthController {
     return this.authService.sendEmailVerificationCode(dto.email)
   }
 
-  @Post('verify-email')
+  @Post('verify-email-code')
   @HttpCode(HttpStatus.OK)
   async verifyEmailCode(@Body() dto: VerifyEmailTokenDto): Promise<void> {
     return this.authService.verifyEmailToken(dto.token)

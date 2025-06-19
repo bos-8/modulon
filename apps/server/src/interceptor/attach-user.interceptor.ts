@@ -1,4 +1,4 @@
-// @file: apps/server/src/interceptors/attach-user.interceptor.ts
+// @file: server/src/interceptors/attach-user.interceptor.ts
 import {
   Injectable,
   NestInterceptor,

@@ -1,12 +1,12 @@
-// @file: src/app/page.tsx
+// @file: client/src/app/[locale]/page.tsx
 import { useTranslations } from "next-intl";
-import { Link } from '@/i18n/navigation';
+import { UserRole } from '@modulon/types';
 export default function Home() {
   const t = useTranslations('HomePage');
   return (
     <main className="flex flex-col items-center justify-center px-6 py-12 bg-gray-50 dark:bg-gray-900 transition-colors">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white">MODULON</h1>
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-white">MODULON </h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">{t('modulon')}</p>
       </div>
 

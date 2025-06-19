@@ -1,3 +1,4 @@
+// @file: server/src/modules/auth/auth.service.ts
 import { Injectable, ConflictException, Logger, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService, UserRole } from '@modulon/database';
 import { RegisterDto, LoginDto } from './auth.dto';
@@ -35,7 +36,6 @@ export class AuthService {
       },
     })
     await this.sendEmailVerificationCode(user.email)
-    Logger.debug(`${user.email}`, 'REGISTER');
     return { message: `Wysłano kod na ${dto.email}` }
   }
 
@@ -72,7 +72,7 @@ export class AuthService {
       { sub: userId, email, role, sid: sessionId },
       {
         secret: this.config.get<ServerConfig>('server').accessToken.secret,
-        expiresIn: this.config.get<ServerConfig>('server').accessToken.expiresInMs,
+        expiresIn: this.config.get<ServerConfig>('server').accessToken.expiresInSec,
       },
     )
 
@@ -80,7 +80,7 @@ export class AuthService {
       { sub: userId, sid: sessionId },
       {
         secret: this.config.get<ServerConfig>('server').refreshToken.secret,
-        expiresIn: this.config.get<ServerConfig>('server').refreshToken.expiresInMs,
+        expiresIn: this.config.get<ServerConfig>('server').refreshToken.expiresInSec,
 
       },
     )
@@ -132,7 +132,7 @@ export class AuthService {
     res.clearCookie('refresh_token', cookieOptions)
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
+  async logout(req: Request, res: Response): Promise<{ message: string }> {
     const refreshToken = req.cookies?.refresh_token
 
     if (refreshToken) {
@@ -149,6 +149,7 @@ export class AuthService {
     }
 
     this.clearAuthCookies(res)
+    return { message: 'Logout successful' }
   }
 
   async refreshSession(req: Request): Promise<AuthResponse> {
@@ -159,7 +160,7 @@ export class AuthService {
     let payload: any
     try {
       payload = await this.jwt.verifyAsync(refreshToken, {
-        secret: this.config.get('auth.refreshToken.secret'),
+        secret: this.config.get<ServerConfig>('server').refreshToken.secret,
       })
     } catch {
       throw new UnauthorizedException('Invalid or expired token')
@@ -178,7 +179,7 @@ export class AuthService {
     await this.prisma.session.update({
       where: { id: session.id },
       data: {
-        expires: new Date(Date.now() + this.config.get('auth.refreshToken.expiresInMs')),
+        expires: new Date(Date.now() + this.config.get<ServerConfig>('server').accessToken.expiresInMs),
       },
     })
 
@@ -191,16 +192,16 @@ export class AuthService {
         sid: session.id,
       },
       {
-        secret: this.config.get('auth.accessToken.secret'),
-        expiresIn: this.config.get('auth.accessToken.expiresInSec'),
+        secret: this.config.get<ServerConfig>('server').accessToken.secret,
+        expiresIn: this.config.get<ServerConfig>('server').accessToken.expiresInSec,
       },
     )
 
     const newRefreshToken = await this.jwt.signAsync(
       { sub: session.user.id, sid: session.id },
       {
-        secret: this.config.get('auth.refreshToken.secret'),
-        expiresIn: this.config.get('auth.refreshToken.expiresInSec'),
+        secret: this.config.get<ServerConfig>('server').refreshToken.secret,
+        expiresIn: this.config.get<ServerConfig>('server').refreshToken.expiresInSec,
       },
     )
 
@@ -225,23 +226,24 @@ export class AuthService {
     }
   }
 
+
   async sendEmailVerificationCode(email: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } })
     if (!user) throw new NotFoundException('User not found')
 
     const token = uuid()
-    const expires = new Date(Date.now() + this.config.get('auth.email_verification_ttl.miliSeconds'))
+    const expiresAt = new Date(Date.now() + this.config.get<ServerConfig>('server').emailVerificationTTL.milliseconds)
 
     await this.prisma.verificationToken.create({
       data: {
         userId: user.id,
         token,
         type: 'EMAIL_CONFIRMATION',
-        expires,
+        expires: expiresAt,
       },
     })
 
-    Logger.debug(`${email} >>> ${this.config.get('auth.clientUrl')}/verify-email-link?token=${token}`, 'EMAIL CODE')
+    Logger.debug(`${email} >>> ${this.config.get<ServerConfig>('server').clientUrl}/verify-email?token=${token}`, 'EMAIL CODE')
     // TODO: Send email with code via email service
   }
 

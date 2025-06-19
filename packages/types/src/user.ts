@@ -8,3 +8,11 @@ export enum UserRole {
   USER = 'USER',
   GUEST = 'GUEST'
 }
+
+export interface SessionResponse {
+  id: string
+  email: string
+  role: UserRole
+  exp: number // expiry timestamp (z tokena)
+  iat: number // issued at
+}

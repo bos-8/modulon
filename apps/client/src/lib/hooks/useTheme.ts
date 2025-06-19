@@ -1,3 +1,4 @@
+// @file: client/src/lib/hooks/useTheme.ts
 'use client'
 
 import { useEffect, useState } from 'react'

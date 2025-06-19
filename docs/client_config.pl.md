@@ -7,8 +7,12 @@
 ```powershell
 npm install react-bootstrap-icons
 npm install next-intl
-npm install react-hook-form zod @hookform/resolvers
 npm install axios
+npm install react-hook-form zod @hookform/resolvers
+npm install clsx
+npm install zustand
+npm install @tanstack/react-query
+
 ```
 
 ## MILESTONES

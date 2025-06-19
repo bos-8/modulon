@@ -1,6 +1,6 @@
-// @file: apps/server/src/interfaces/jwt.request.user.interface.ts
+// @file: server/src/interfaces/jwt.request.user.interface.ts
 
-import { UserRole } from '@modulon/database'
+import { UserRole } from '@modulon/types'
 export interface JwtRequestUser {
   id: string
   email: string

@@ -1,4 +1,4 @@
-// @file: apps/server/src/main.ts
+// @file: server/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';

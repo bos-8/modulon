@@ -1,2 +1,3 @@
 // @file: packages/types/src/index.ts
-export { UserRole } from './user';
+export { UserRole, SessionResponse } from './user';
+export { NotificationData, NotificationType } from './notification';

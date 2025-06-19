@@ -1,4 +1,4 @@
-// @file: apps/server/src/interfaces/auth.interface.ts
+// @file: server/src/interfaces/auth.interface.ts
 import { UserRole } from '@modulon/database'
 
 export interface TokenPair {
@@ -12,11 +12,4 @@ export interface AuthResponse {
     role: UserRole
   }
   tokens: TokenPair
-}
-
-export interface MeResponse {
-  id: string
-  email: string
-  role: UserRole
-  exp: number
 }

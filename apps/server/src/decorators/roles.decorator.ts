@@ -1,4 +1,4 @@
-// @file: apps/server/src/decorators/roles.decorator.ts
+// @file: server/src/decorators/roles.decorator.ts
 import { SetMetadata } from '@nestjs/common'
 import { UserRole } from '@modulon/database'
 

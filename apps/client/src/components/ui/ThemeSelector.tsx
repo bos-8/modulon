@@ -1,3 +1,4 @@
+// @file: client/src/components/ui/ThemeSelector.tsx
 'use client'
 
 import { useTheme } from '@/lib/hooks/useTheme'
@@ -37,4 +38,3 @@ export const ThemeSelector = () => {
     </button>
   )
 }
-//EOF

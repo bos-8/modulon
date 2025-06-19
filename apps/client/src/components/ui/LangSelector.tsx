@@ -1,3 +1,4 @@
+// @file: client/src/components/ui/LangSelector.tsx
 'use client'
 
 import { useLocale } from 'next-intl'

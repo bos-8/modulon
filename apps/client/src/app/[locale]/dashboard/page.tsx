@@ -1,4 +1,4 @@
-// @file: src/app/[locale]/dashboard/page.tsx
+// @file: client/src/app/[locale]/dashboard/page.tsx
 'use client';
 
 import { useTranslations } from 'next-intl';

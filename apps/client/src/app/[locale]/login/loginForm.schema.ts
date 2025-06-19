@@ -1,3 +1,4 @@
+// @file: client/src/app/[locale]/login/loginForm.schema.ts
 import { z } from 'zod';
 
 export const loginSchema = (t: (key: string) => string) =>

@@ -1,7 +1,7 @@
+// @file: client/src/components/layout/Footer.tsx
 import { ThemeSelector } from '@/components/ui/ThemeSelector'
 import { LangSelector } from '@/components/ui/LangSelector'
 import { useTranslations } from "next-intl";
-
 
 export default function Footer() {
   const t = useTranslations('Footer');
@@ -17,4 +17,3 @@ export default function Footer() {
     </footer>
   )
 }
-//EOF
