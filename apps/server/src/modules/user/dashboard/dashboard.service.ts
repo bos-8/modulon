@@ -41,27 +41,33 @@ export class DashboardService {
   }
 
   async updateUserData(userId: string, dto: UpdateUserDashboardDto): Promise<APIMessageResponse> {
-    const { username, name, birthDate, gender, ...rest } = dto
+    if (!dto) throw new BadRequestException('Brak danych do aktualizacji')
+
+    const { username, name, personalData } = dto
 
     const userUpdateData: any = {}
-    const personalUpdateData: any = {}
-
     if (username !== undefined) userUpdateData.username = username
     if (name !== undefined) userUpdateData.name = name
 
-    for (const [key, value] of Object.entries(rest)) {
-      if (value !== undefined) personalUpdateData[key] = value
-    }
+    const personalUpdateData: any = {}
+    for (const [key, value] of Object.entries(personalData)) {
+      if (value === undefined || value === null) continue
 
-    if (birthDate !== undefined) { personalUpdateData.birthDate = birthDate ? new Date(birthDate) : null }
-    if (gender !== undefined) { personalUpdateData.gender = gender }
+      if (key === 'birthDate') {
+        personalUpdateData.birthDate = new Date(value)
+      } else {
+        personalUpdateData[key] = value
+      }
+    }
 
     await this.prisma.user.update({
       where: { id: userId },
       data: {
         ...userUpdateData,
         ...(Object.keys(personalUpdateData).length > 0 && {
-          personalData: { update: personalUpdateData },
+          personalData: {
+            update: personalUpdateData,
+          },
         }),
       },
     })

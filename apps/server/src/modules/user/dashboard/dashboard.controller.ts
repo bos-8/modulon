@@ -28,7 +28,7 @@ export class DashboardController {
   @HttpCode(HttpStatus.OK)
   async updateDashboard(
     @CurrentUser() user: JwtRequestUser,
-    dto: UpdateUserDashboardDto
+    @Body() dto: UpdateUserDashboardDto
   ): Promise<APIMessageResponse> {
     return this.dashboardService.updateUserData(user.id, dto)
   }
@@ -37,7 +37,7 @@ export class DashboardController {
   @HttpCode(HttpStatus.OK)
   async changePassword(
     @CurrentUser() user: JwtRequestUser,
-    dto: ChangePasswordDto
+    @Body() dto: ChangePasswordDto
   ): Promise<APIMessageResponse> {
     return this.dashboardService.changeUserPassword(user.id, dto)
   }

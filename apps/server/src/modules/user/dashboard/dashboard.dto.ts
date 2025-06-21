@@ -1,21 +1,29 @@
 // @file: server/src/modules/user/dashboard/dashboard.dto.ts
-import { IsOptional, IsString, IsEnum, IsDateString, MinLength } from 'class-validator'
+import { IsOptional, IsString, IsEnum, IsDateString, MinLength, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer'
 import { Gender } from '@prisma/client'
 
-export class UpdateUserDashboardDto {
-  @IsOptional() @IsString() username?: string
-  @IsOptional() @IsString() name?: string
+export class UpdatePersonalDataDto {
+  @IsOptional() @IsString() firstName?: string | null
+  @IsOptional() @IsString() middleName?: string | null
+  @IsOptional() @IsString() lastName?: string | null
+  @IsOptional() @IsString() phoneNumber?: string | null
+  @IsOptional() @IsString() address?: string | null
+  @IsOptional() @IsString() city?: string | null
+  @IsOptional() @IsString() zipCode?: string | null
+  @IsOptional() @IsString() country?: string | null
+  @IsOptional() @IsDateString() birthDate?: string | null
+  @IsOptional() @IsEnum(Gender) gender?: Gender | null
+}
 
-  @IsOptional() @IsString() firstName?: string
-  @IsOptional() @IsString() middleName?: string
-  @IsOptional() @IsString() lastName?: string
-  @IsOptional() @IsString() phoneNumber?: string
-  @IsOptional() @IsString() address?: string
-  @IsOptional() @IsString() city?: string
-  @IsOptional() @IsString() zipCode?: string
-  @IsOptional() @IsString() country?: string
-  @IsOptional() @IsDateString() birthDate?: string
-  @IsOptional() @IsEnum(Gender) gender?: Gender
+export class UpdateUserDashboardDto {
+  @IsOptional() @IsString() username?: string | null
+  @IsOptional() @IsString() name?: string | null
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdatePersonalDataDto)
+  personalData?: UpdatePersonalDataDto
 }
 
 export class ChangePasswordDto {

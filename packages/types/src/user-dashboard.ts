@@ -24,6 +24,26 @@ export interface PublicAccountData {
   lastLoginAt: Date | null
 }
 
+
 export interface PublicUserAccountDto extends PublicAccountData {
   personalData: PublicPersonalData | null
+}
+
+export interface UpdatePersonalDataDto {
+  firstName?: string | null
+  middleName?: string | null
+  lastName?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  city?: string | null
+  zipCode?: string | null
+  country?: string | null
+  birthDate?: string | null // Uwaga: string w formacie ISO yyyy-MM-dd
+  gender?: Gender | null
+}
+
+export interface UpdateUserAccountDto {
+  username?: string | null
+  name?: string | null
+  personalData?: UpdatePersonalDataDto
 }
