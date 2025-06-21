@@ -1,68 +1,70 @@
-# modulon
+# MODULON
 
+MODULON is a modular full-stack web platform built with **Next.js App Router** and **NestJS**. It features a highly secure authentication system, session management, RBAC authorization, and a scalable monorepo architecture powered by **Turborepo**.
 
-```
+## Tech Stack
+
+### Language
+- **TypeScript**
+
+### Frontend (Client)
+- **Next.js 15+** (App Router)
+- **Tailwind CSS**
+- **React Hook Form + Zod** for forms and validation
+- **Zustand** for local/global UI state
+- **TanStack Query** for async/server state
+- **next-intl** for internationalization (i18n)
+- **API Proxy Layer** using `/app/api/...` for secure backend communication
+
+### Backend (Server)
+- **NestJS** (modular architecture)
+- **Prisma ORM** + **PostgreSQL**
+- **JWT (Access/Refresh)** auth
+- **Session-based authentication with HttpOnly cookies**
+- **RBAC (Role-Based Access Control)** with custom guards
+- **Email verification tokens**
+- **Rate limiting, Helmet, and CSP for security**
+
+### Database (Prisma)
+- For develping time - XAMPP MariaDB -> Prod target -> PostrageSQL
+
+### Tooling
+- **Turborepo** for monorepo management
+- **Workspaces**:
+  - `apps/client` – Next.js app
+  - `apps/server` – NestJS API
+  - `packages/types` – shared TypeScript types
+  - `packages/database` – Prisma client & schema
+
+## Security Highlights
+- Secure **access/refresh token flow**
+- Tokens stored in **HttpOnly, SameSite=Lax cookies**
+- Refresh flow with **sliding expiration window**
+- **Session table in DB** with expiration and device/IP info
+- Popup warning before session expires (Zustand)
+- Secure API proxy (Node runtime, full cookie forwarding)
+- Rate limiting, Helmet headers, and secure CSP
+
+## Features
+- [x] User Registration with email verification
+- [x] Login + Token-based auth
+- [x] Session refresh flow with countdown popup
+- [x] Logout from anywhere (popup, navbar, programmatically)
+- [x] Role-based protection (User, Admin, System, Root)
+- [x] Admin Panel: user & session management
+- [x] SSR-safe architecture
+- [x] i18n-ready: Polish (default) + English
+
+## Monorepo Structure
+
+```bash
 modulon/
 ├── apps/
-│   ├── client/                    # Frontend: Next.js (App Router)
-│   │   ├── app/                   # Routing: pages/layouts/API proxy
-│   │   ├── components/            # UI komponenty
-│   │   ├── lib/                   # Klientowe utils, axios, hooks
-│   │   ├── types/                 # Typy domenowe
-│   │   ├── styles/                # Tailwind / global CSS
-│   │   ├── public/                # Assety statyczne
-│   │   ├── middleware.ts          # Middleware (auth redirect)
-│   │   ├── .env.local             # NEXT_PUBLIC_ zmienne
-│   │   └── next.config.js         # Konfiguracja Next.js
-│   │
-│   └── server/                    # Backend: NestJS
-│       ├── src/
-│       │   ├── main.ts            # Bootstrap
-│       │   ├── app.module.ts      # Główny moduł
-│       │   ├── config/            # ConfigService, env, helmet, cors
-│       │   ├── modules/           # Moduły domenowe (auth, user, contest…)
-│       │   ├── database/          # PrismaService, connection
-│       │   ├── guards/            # Auth, RoleGuard
-│       │   ├── interceptors/      # Timeout, Logger
-│       │   ├── strategies/        # Passport (JWT, Google)
-│       │   ├── decorators/        # CurrentUser itp.
-│       │   └── common/            # Helpers, logger, const
-│       ├── prisma/
-│       │   ├── schema.prisma      # Definicja bazy danych
-│       │   └── migrations/        # Prisma migracje
-│       └── .env.local             # BACKEND secrets (JWT, DB, Redis)
-│
-├── docker/                        # Dockerfiles i docker-compose
-│   ├── client/                    # Dockerfile dla Next.js
-│   ├── server/                    # Dockerfile dla NestJS
-│   ├── db/                        # PostgreSQL init i config
-│   ├── redis/                     # Redis config
-│   └── docker-compose.yml         # Stack dev/prod
-│
-├── infra/                         # Infrastruktura (nginx, certyfikaty)
-│   ├── nginx/                     # Proxy + SSL + LBA ready
-│   ├── certs/                     # Certyfikaty TLS
-│   └── traefik/                   # (opcjonalnie: dla dynamic LBA)
-│
-├── packages/                      # Współdzielone paczki
-│   ├── types/                     # Uniwersalne typy domenowe
-│   └── utils/                     # Wspólne helpery (np. validate.ts)
-│
-├── scripts/                       # Skrypty CLI
-│   ├── init.sh                    # Bootstrap projektu
-│   ├── migrate.sh                 # Prisma migrate
-│   └── seed.ts                    # Seeding danych
-│
-├── docs/                          # Dokumentacja i diagramy
-│   ├── README.md
-│   ├── architecture.md
-│   ├── database.md
-│   └── diagrams/
-│       ├── system.mmd             # Mermaid: architektura
-│       └── auth-flow.mmd
-│
-├── .env                           # (opcjonalnie) global fallback
-├── .gitignore
-├── README.md
-└── turbo.json / nx.json           # Monorepo orchestrator (Turbo/NX)
-```
+│   ├── client/             # FRONTEND  - NEXT.JS
+│   └── server/             # BACKEND   - NEST.JS
+├── packages/
+│   ├── database/           # DATABASE  - PRISMA schema & client
+│   └── types/              # TYPES     - Sheared (UserRole, DTOs, etc.)
+├── turbo.json              # TURBOREPO - config tasks
+└── tsconfig.base.json      # TSCONFIG
+````

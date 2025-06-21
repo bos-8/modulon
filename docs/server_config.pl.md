@@ -26,6 +26,12 @@ nest g module modules/auth
 nest g controller modules/auth
 nest g service modules/auth
 nest g class modules/auth/auth.dto --flat
+
+# user/dashboard
+nest g module modules/user/dashboard
+nest g controller modules/user/dashboard
+nest g service modules/user/dashboard
+nest g class modules/user/dashboard/dashboard.dto --flat
 ```
 
 ## THROTTLER TEST via PowerShell

@@ -1,12 +1,17 @@
 // @file: packages/types/src/user.ts
-
 export enum UserRole {
   ROOT = 'ROOT',
   SYSTEM = 'SYSTEM',
-  ADMIN = 'ADMINISTRATOR',
+  ADMIN = 'ADMIN',
   MODERATOR = 'MODERATOR',
   USER = 'USER',
   GUEST = 'GUEST'
+}
+
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHER = 'OTHER'
 }
 
 export interface SessionResponse {

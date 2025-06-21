@@ -1,3 +1,5 @@
 // @file: packages/types/src/index.ts
-export { UserRole, SessionResponse } from './user';
+export { UserRole, Gender, SessionResponse } from './user';
 export { NotificationData, NotificationType } from './notification';
+export { PublicUserAccountDto } from './user-dashboard';
+export { APIMessageResponse } from './responses';

@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ServerConfig } from './config/server.type';
+import { DashboardModule } from './modules/user/dashboard/dashboard.module';
 import serverConfig from './config/server.config';
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import serverConfig from './config/server.config';
         ],
       }),
       inject: [ConfigService],
-    })
+    }),
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [
