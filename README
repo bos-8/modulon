@@ -1,0 +1,154 @@
+```yaml
+project: modulon
+```
+
+# modulon
+
+A Turborepo monorepo powered by **pnpm**.
+Apps:
+- **apps/web** — Next.js
+- **apps/api** — NestJS
+
+Local infrastructure (Docker stack):
+- **NGINX** (reverse proxy)
+- **Keycloak** (SSO / RBAC)
+- **PostgreSQL**
+- **Redis**
+- **MinIO** (S3-compatible storage)
+
+---
+
+## Requirements
+
+- **Docker Desktop**
+- **Node.js** + **pnpm**
+- **Windows PowerShell** (stack scripts use `scripts/modulon.ps1`) for now
+
+Add this snippet to your README (right under **Requirements** or at the start of **Quick start**):
+
+## Hosts entry (required)
+
+This project expects a local domain for the reverse proxy.
+
+Add the following line to your hosts file:
+
+- **Windows:** `C:\Windows\System32\drivers\etc\hosts`
+
+```txt
+127.0.0.1 modulon.local
+````
+
+> You may need to run your editor as Administrator.
+
+---
+
+## Quick start
+
+### 1) Cold start (first run on a new machine)
+Installs dependencies, boots the Docker stack, and starts dev servers.
+```bash
+pnpm start:cold
+````
+
+### 2) Warm start (you already have dependencies + stack)
+
+```bash
+pnpm start:warm
+```
+
+### 3) Dev (recommended day-to-day)
+
+Auto-starts the stack if needed, then runs Turbo dev.
+
+```bash
+pnpm dev
+```
+
+---
+
+## Stack control
+
+### Start stack (if stopped)
+
+```bash
+pnpm stack:start
+```
+
+### Stop stack (keep containers, just stop them)
+
+```bash
+pnpm stack:stop
+```
+
+### Down stack (remove containers; volumes may remain depending on docker config)
+
+```bash
+pnpm stack:down
+```
+
+### Status / health check
+
+```bash
+pnpm stack:status
+```
+
+---
+
+## Cleanup / reset
+
+### Delete project (local nuke)
+
+Stops/removes stack and deletes `node_modules`.
+
+```bash
+pnpm delete:project
+```
+
+### Full restart (clean + cold start)
+
+```bash
+pnpm restart:project
+```
+
+---
+
+## Common commands
+
+### Build
+
+```bash
+pnpm build
+```
+
+### Lint
+
+```bash
+pnpm lint
+```
+
+### Typecheck
+
+```bash
+pnpm typecheck
+```
+
+### Tests TODO
+
+```bash
+pnpm test
+```
+
+---
+
+## Notes
+
+* Docker stack is managed via: `scripts/modulon.ps1`
+* Monorepo tasks are executed via Turborepo (`turbo dev/build/...`)
+* Database layer lives in `packages/database` (Prisma `^7.0.0`)
+* Shared schemas live in `packages/schemas`
+
+---
+
+## License
+
+AGPL-3.0-only

@@ -1,0 +1,36 @@
+{
+  "name": "modulon",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "(pnpm stack:is-running || pnpm stack:up) && turbo dev",
+    "start:warm": "pnpm dev",
+    "start:cold": "pnpm install && pnpm stack:up && pnpm dev",
+    "restart:project": "pnpm stack:down && pnpm clean && pnpm start:cold",
+    "restart:dev": "pnpm clean && pnpm install && pnpm dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "clean:artifacts": "turbo run clean --continue",
+    "clean:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1 -Build",
+    "clean:deps": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/clean.ps1 -Deps",
+    "clean": "pnpm clean:build && pnpm clean:deps",
+    "stack:up": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --up",
+    "stack:down": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --down",
+    "stack:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --stop",
+    "stack:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --start",
+    "stack:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --status",
+    "stack:is-running": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --is-running",
+    "delete:project": "pnpm stack:down && pnpm clean",
+    "az5": "pnpm delete:project"
+  },
+  "keywords": [],
+  "author": "Kacper BO$ <https://github.com/bos-8>",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.26.0",
+  "devDependencies": {
+    "rimraf": "^6.1.2",
+    "turbo": "^2.6.3"
+  }
+}
