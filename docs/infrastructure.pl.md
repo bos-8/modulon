@@ -146,6 +146,15 @@ ENDPOINTS:
 - Wspólne typy i schematy importowane z `packages/`
 ```yaml
 PORT: 3000
+TECH:
+  - nextjs (app router)
+  - tailwindcss
+  - zod
+  - react-hook-form
+  - @tanstack/react-query
+  - zustand
+  - next-intl
+  - auth.js (keycloak oidc)
 ```
 
 ## NEST (apps/api)
