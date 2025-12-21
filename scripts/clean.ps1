@@ -49,7 +49,7 @@ if ($Build) {
   if (Test-Path ".turbo") { $targets += (Resolve-Path ".turbo").Path }
 
   $targets += Get-ChildItem -Path "apps", "packages" -Directory -Recurse -Force |
-  Where-Object { $_.Name -in @(".next", "dist", "coverage") } |
+  Where-Object { $_.Name -in @(".next", "dist", "coverage", "generated", ".turbo") } |
   ForEach-Object { $_.FullName }
 }
 

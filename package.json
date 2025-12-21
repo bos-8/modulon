@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "(pnpm stack:is-running || pnpm stack:up) && turbo dev",
+    "dev": "pnpm powershell:cls && (pnpm stack:is-running || pnpm stack:up) && turbo dev",
     "start:warm": "pnpm dev",
     "start:cold": "pnpm install && pnpm stack:up && pnpm dev",
     "restart:project": "pnpm stack:down && pnpm clean && pnpm start:cold",
@@ -23,14 +23,28 @@
     "stack:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --status",
     "stack:is-running": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/modulon.ps1 --is-running",
     "delete:project": "pnpm stack:down && pnpm clean",
-    "az5": "pnpm delete:project"
+    "az5": "pnpm delete:project",
+    "db:build": "turbo run build --filter=@modulon/database",
+    "db:generate": "turbo run db:generate --filter=@modulon/database --no-cache",
+    "db:migrate": "turbo run db:migrate --filter=@modulon/database --no-cache",
+    "db:deploy": "turbo run db:deploy --filter=@modulon/database --no-cache",
+    "db:studio": "turbo run db:studio --filter=@modulon/database --no-cache",
+    "db:reset": "turbo run db:reset --filter=@modulon/database --no-cache",
+    "db:reset:force": "turbo run db:reset:force --filter=@modulon/database --no-cache",
+    "schemas:build": "turbo run schemas:build --filter=@modulon/schemas --no-cache",
+    "prisma:new:migration": "(pnpm stack:is-running || pnpm stack:up) && pnpm -C packages/database exec -- prisma migrate dev",
+    "prisma:del:migration": "(pnpm stack:is-running || pnpm stack:up) &&pnpm -C packages/database exec -- prisma migrate reset && pnpm powershell:clean:prisma:migration",
+    "prisma:seed": "pnpm -C packages/database exec -- tsx prisma/seed.ts",
+    "powershell:clean:prisma:migration": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"if (Test-Path 'packages/database/prisma/migrations') { Remove-Item -Recurse -Force 'packages/database/prisma/migrations' }\"",
+    "powershell:cls": "powershell -NoProfile -ExecutionPolicy Bypass -Command Clear-Host"
   },
   "keywords": [],
   "author": "Kacper BO$ <https://github.com/bos-8>",
   "license": "AGPL-3.0-only",
-  "packageManager": "pnpm@10.26.0",
+  "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa",
   "devDependencies": {
+    "dotenv": "^17.2.3",
     "rimraf": "^6.1.2",
-    "turbo": "^2.6.3"
+    "turbo": "^2.7.0"
   }
 }

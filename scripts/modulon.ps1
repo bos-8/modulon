@@ -94,7 +94,81 @@ function Invoke-Compose {
 
 function Show-StackStatus { Invoke-Compose -Args @("ps") }
 
+function Get-ShellScriptFiles {
+  $composeDir = Resolve-ComposeDirectory
+  # Recurse because in practice scripts live in subfolders (entrypoints, init, etc.)
+  $files = Get-ChildItem -Path $composeDir -Recurse -File -Filter "*.sh" -ErrorAction SilentlyContinue
+  return @($files)
+}
+
+function Convert-FileToLfIfNeeded {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$FilePath
+  )
+
+  $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+
+  # Safety: if file contains many NUL bytes, it may be UTF-16 or not a normal text file.
+  # We skip to avoid corrupting it.
+  if ([System.Array]::IndexOf($bytes, [byte]0) -ge 0) {
+    Write-Warn "Skipping (contains NUL bytes, looks like UTF-16/binary): $FilePath"
+    return $false
+  }
+
+  # Quick scan for CRLF
+  $hasCrLf = $false
+  for ($i = 0; $i -lt $bytes.Length - 1; $i++) {
+    if ($bytes[$i] -eq 13 -and $bytes[$i + 1] -eq 10) { $hasCrLf = $true; break }
+  }
+
+  if (-not $hasCrLf) { return $false }
+
+  # Convert CRLF -> LF, and also drop any lone CR
+  $out = New-Object System.Collections.Generic.List[byte]($bytes.Length)
+
+  for ($i = 0; $i -lt $bytes.Length; $i++) {
+    $b = $bytes[$i]
+
+    if ($b -eq 13) {
+      # If CRLF -> keep only LF (skip CR)
+      if ($i -lt $bytes.Length - 1 -and $bytes[$i + 1] -eq 10) { continue }
+      # Lone CR -> drop it
+      continue
+    }
+
+    $out.Add($b)
+  }
+
+  [System.IO.File]::WriteAllBytes($FilePath, $out.ToArray())
+  return $true
+}
+
+function Ensure-ShellScriptsLf {
+  $files = Get-ShellScriptFiles
+  if ($files.Count -eq 0) {
+    Write-Info "No .sh files found under infra/docker."
+    return
+  }
+
+  $converted = 0
+  foreach ($f in $files) {
+    if (Convert-FileToLfIfNeeded -FilePath $f.FullName) {
+      $converted++
+      Write-Info "Converted to LF: $($f.FullName)"
+    }
+  }
+
+  if ($converted -eq 0) {
+    Write-Info "All .sh files are already LF ($($files.Count) checked)."
+  }
+  else {
+    Write-Info "LF normalization done ($converted converted, $($files.Count) checked)."
+  }
+}
+
 function Do-Up {
+  Ensure-ShellScriptsLf
   Write-Info "Pulling images (if needed)..."
   Invoke-Compose -Args @("pull")
 
@@ -112,6 +186,7 @@ function Do-Down {
 }
 
 function Do-Start {
+  Ensure-ShellScriptsLf
   Write-Info "Starting existing containers..."
   Invoke-Compose -Args @("start")
   Write-Info "Stack status:"

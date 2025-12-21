@@ -63,6 +63,45 @@ pnpm dlx @nestjs/cli@latest new apps/api --package-manager=pnpm --skip-git
 pnpm -C apps/api add -D @nestjs/cli
 ```
 
+## Instalacja PRISMA
+```powershell
+mkdir packages/database
+```
+```powershell
+pnpm -C .\packages\database\ init
+```
+```powershell
+pnpm -C packages/database add -D prisma@^7.0.0
+pnpm -C packages/database add -D typescript
+pnpm -C packages/database add @prisma/client@^7.0.0 pg dotenv
+pnpm -C packages/database add -D tsx @prisma/adapter-pg pg
+```
+```powershell
+# weryfikacja
+pnpm -C packages/database exec -- prisma -v
+```
+
+```powershell
+# prisma init schema
+pnpm -C packages/database exec -- prisma init --datasource-provider postgresql
+```
+
+## Schemas
+```powershell
+mkdir packages\contracts
+pnpm -C packages/contracts init
+pnpm -C packages/contracts add -D typescript
+pnpm -C packages/contracts add zod
+```
+```powershell
+pnpm -C apps/api add @modulon/schemas@workspace:*
+pnpm -C apps/web add @modulon/schemas@workspace:*
+```
+
+## Weryfikacja workspace:
+```powershell
+pnpm -r list --depth -1
+```
 
 
 # DOCKER
