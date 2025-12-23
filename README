@@ -1,19 +1,22 @@
 ```yaml
 project: modulon
-```
+````
 
 # modulon
 
-A Turborepo monorepo powered by **pnpm**.
-Apps:
-- **apps/web** — Next.js
-- **apps/api** — NestJS
+Enterprise-ready **Turborepo** monorepo powered by **pnpm**.
 
-Local infrastructure (Docker stack):
-- **NGINX** (reverse proxy)
+**Apps**
+
+- **apps/web** — Next.js (frontend)
+- **apps/api** — NestJS (backend)
+
+**Local infrastructure (Docker stack)**
+
+- **NGINX** (single entrypoint / reverse proxy)
 - **Keycloak** (SSO / RBAC)
-- **PostgreSQL**
-- **Redis**
+- **PostgreSQL** (DB)
+- **Redis** (cache / rate limit / sessions depending on implementation)
 - **MinIO** (S3-compatible storage)
 
 ---
@@ -22,41 +25,63 @@ Local infrastructure (Docker stack):
 
 - **Docker Desktop**
 - **Node.js** + **pnpm**
-- **Windows PowerShell** (stack scripts use `scripts/modulon.ps1`) for now
+- **Windows PowerShell** (stack scripts use `scripts/modulon.ps1` for now)
 
-Add this snippet to your README (right under **Requirements** or at the start of **Quick start**):
+---
 
 ## Hosts entry (required)
 
 This project expects a local domain for the reverse proxy.
 
-Add the following line to your hosts file:
+Add this line to your hosts file:
 
 - **Windows:** `C:\Windows\System32\drivers\etc\hosts`
 
 ```txt
 127.0.0.1 modulon.local
-````
+```
 
 > You may need to run your editor as Administrator.
+
+---
+
+## SSL certificates (required before Quick start)
+
+NGINX runs with HTTPS locally. You must generate local development certificates first.
+
+### 1) Generate certs
+
+Run the certificate generation script:
+
+```bash
+pnpm certs:generate
+```
+
+### 2) Trust the cert (recommended)
+
+If your OS/browser warns about the certificate, import the generated CA (or the certificate) into your local trusted store.
+
+> Certificates location and script are defined in `infra/docker/certs/` (or your repo’s certs folder).
 
 ---
 
 ## Quick start
 
 ### 1) Cold start (first run on a new machine)
+
 Installs dependencies, boots the Docker stack, and starts dev servers.
+
 ```bash
 pnpm start:cold
-````
+```
 
-### 2) Warm start (you already have dependencies + stack)
+### 2) Warm start (deps + stack already exist)
 
 ```bash
 pnpm start:warm
 ```
 
-### 3) Dev (recommended day-to-day)
+### 3) Day-to-day dev (recommended)
 
 Auto-starts the stack if needed, then runs Turbo dev.
 
@@ -66,89 +91,58 @@ pnpm dev
 
 ---
 
-## Stack control
+## Local URLs (via NGINX)
 
-### Start stack (if stopped)
+* **Web:** `https://modulon.local/`
+* **API:** `https://modulon.local/api`
+* **Keycloak:** `https://modulon.local/auth`
+* **MinIO:** `https://modulon.local/minio`
 
-```bash
-pnpm stack:start
-```
-
-### Stop stack (keep containers, just stop them)
-
-```bash
-pnpm stack:stop
-```
-
-### Down stack (remove containers; volumes may remain depending on docker config)
-
-```bash
-pnpm stack:down
-```
-
-### Status / health check
-
-```bash
-pnpm stack:status
-```
-
----
-
-## Cleanup / reset
-
-### Delete project (local nuke)
-
-Stops/removes stack and deletes `node_modules`.
-
-```bash
-pnpm delete:project
-```
-
-### Full restart (clean + cold start)
-
-```bash
-pnpm restart:project
-```
+> Exact routes depend on your NGINX config in `infra/docker/nginx`.
 
 ---
 
 ## Common commands
 
-### Build
-
 ```bash
 pnpm build
-```
-
-### Lint
-
-```bash
 pnpm lint
-```
-
-### Typecheck
-
-```bash
 pnpm typecheck
-```
-
-### Tests TODO
-
-```bash
 pnpm test
 ```
 
 ---
 
-## Notes
+## Stack control (Docker)
 
-* Docker stack is managed via: `scripts/modulon.ps1`
-* Monorepo tasks are executed via Turborepo (`turbo dev/build/...`)
-* Database layer lives in `packages/database` (Prisma `^7.0.0`)
-* Shared schemas live in `packages/schemas`
+```bash
+pnpm stack:status
+pnpm stack:start
+pnpm stack:stop
+pnpm stack:down
+```
+
+> Stack is managed via `scripts/modulon.ps1`.
+
+---
+
+## Project layout (high level)
+
+* `apps/web` — Next.js app
+* `apps/api` — NestJS app
+* `packages/database` — Prisma schema, migrations, DB client
+* `packages/schemas` — shared validation/schema layer
+* `infra/docker` — docker-compose stack & service configs
+* `docs/` — architecture/runbooks/extra docs
+
+---
+
+## Contributing
+
+See **`CONTRIBUTING.md`** (root) for engineering rules, security requirements, structure conventions, and performance guidelines.
 
 ---
 
 ## License
 
-AGPL-3.0-only
+**AGPL-3.0-only**

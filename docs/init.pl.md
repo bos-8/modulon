@@ -147,7 +147,7 @@ mkcert -install
 4. Wygeneruj certyfikat dla `modulon.local` oraz lokalnych adresów:
 
 ```bash
-mkcert modulon.local localhost 127.0.0.1 ::1
+mkcert "modulon.local" "*.modulon.local" "localhost" "127.0.0.1" "::1"
 ```
 
 W tym folderze powstaną pliki:

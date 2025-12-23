@@ -92,12 +92,12 @@ services:
 
       # Reverse proxy (TLS terminates at nginx => http to Keycloak is OK)
       KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
+      KC_PROXY_HEADERS: "xforwarded"
 
       # Public URL of Keycloak (what users see)
-      KC_HOSTNAME: https://modulon.local/auth
+      KC_HOSTNAME: "https://modulon.local/auth"
       KC_HOSTNAME_STRICT: "true"
-      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_RELATIVE_PATH: "/auth"
 
       # Optional hardening: trust proxy headers only from nginx/docker subnet
       # KC_PROXY_TRUSTED_ADDRESSES: ${KC_PROXY_TRUSTED_ADDRESSES:-172.16.0.0/12}
