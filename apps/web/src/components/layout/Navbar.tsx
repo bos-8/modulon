@@ -1,6 +1,7 @@
 // @file: apps/web/src/components/layout/Navbar.tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { NavbarAuthSlot } from "@/components/ui/AuthSlot";
 import { ThemeControls } from "@/components/ui/ThemeControls";
 
 type NavItem = { label: string; href: string };
@@ -37,13 +38,8 @@ export function Navbar() {
           <ThemeControls />
 
           {/* Placeholder: later you will replace this with Auth.js state */}
-          <Button theme="main" className="rounded border border-border px-3 py-1.5 text-sm">
-            Sign in
-          </Button>
+          <NavbarAuthSlot />
 
-          <Button theme="danger" className="rounded border border-border px-3 py-1.5 text-sm">
-            Logout
-          </Button>
         </div>
       </div>
 

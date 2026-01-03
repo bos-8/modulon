@@ -1,0 +1,86 @@
+{
+  "realm": "modulon",
+  "enabled": true,
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROOT"
+      },
+      {
+        "name": "SYSTEM"
+      },
+      {
+        "name": "ADMIN"
+      },
+      {
+        "name": "MODERATOR"
+      },
+      {
+        "name": "USER"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "users",
+      "realmRoles": [
+        "USER"
+      ]
+    },
+    {
+      "name": "admins",
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "name": "moderators",
+      "realmRoles": [
+        "MODERATOR"
+      ]
+    },
+    {
+      "name": "system",
+      "realmRoles": [
+        "SYSTEM"
+      ]
+    },
+    {
+      "name": "root",
+      "realmRoles": [
+        "ROOT"
+      ]
+    }
+  ],
+  "defaultGroups": [
+    "/users"
+  ],
+  "clients": [
+    {
+      "clientId": "modulon-web",
+      "name": "Modulon Web (Next.js)",
+      "protocol": "openid-connect",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_MODULON_WEB_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "https://modulon.local/api/auth/callback/keycloak",
+        "http://localhost:3000/api/auth/callback/keycloak"
+      ],
+      "webOrigins": [
+        "https://modulon.local",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "https://modulon.local/*"
+      }
+    }
+  ]
+}
